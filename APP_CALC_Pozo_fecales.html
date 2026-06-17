@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Calc Pozo Fecales v2.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e0e6f0;font-size:14px;padding:16px}
+h2{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#7a8aaa;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid #1e2535}
+h1.app-title{font-size:17px;font-weight:600;color:#c8d8f0;margin-bottom:4px}
+.subtitle{font-size:11px;color:#556070;margin-bottom:20px}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;letter-spacing:.05em;background:#1a2840;color:#5b9cf6;border:1px solid #2a3d60}
+.section{background:#13181f;border:1px solid #1e2535;border-radius:8px;padding:16px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+label{font-size:11px;color:#7a8aaa;display:block;margin-bottom:4px}
+input[type=number],select{width:100%;background:#0c1018;border:1px solid #2a3347;border-radius:5px;color:#c8d8f0;padding:6px 10px;font-size:13px;outline:none}
+input[type=number]:focus{border-color:#3d6ab0}
+input[readonly]{color:#5b9cf6;border-color:#1a2840;background:#0a0f16;cursor:default}
+table.aparatos{width:100%;border-collapse:collapse;font-size:12px}
+table.aparatos th{background:#0c1018;color:#7a8aaa;font-weight:600;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 8px;text-align:left;border-bottom:1px solid #1e2535}
+table.aparatos td{padding:5px 8px;border-bottom:1px solid #161d28;color:#c0cce0;vertical-align:middle}
+table.aparatos tr:hover td{background:#0e141c}
+table.aparatos td input[type=number]{width:70px;padding:4px 6px;text-align:center}
+table.aparatos td.udv{color:#5b9cf6;font-weight:600;text-align:center}
+table.aparatos td.subtipo{color:#556070;font-size:11px}
+.ud-total-row td{background:#0e1520;font-weight:700;color:#90c0ff;padding:7px 8px}
+.result-card{background:#0c1018;border:1px solid #1e2535;border-radius:6px;padding:12px;text-align:center}
+.result-card .val{font-size:20px;font-weight:700;color:#5be3a0;font-variant-numeric:tabular-nums}
+.result-card .val.blue{color:#5b9cf6}
+.result-card .val.amber{color:#f5c518}
+.result-card .lbl{font-size:10px;color:#556070;margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
+.result-card .unit{font-size:11px;color:#7a8aaa;margin-left:2px}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px}
+.ok{background:#0d2a1a;color:#5be3a0;border:1px solid #1a4a30}
+.warn{background:#2a1f08;color:#f5c518;border:1px solid #4a3510}
+.err{background:#2a0e0e;color:#f56060;border:1px solid #4a1818}
+.formula-box{background:#0c1018;border-left:3px solid #2a3d60;padding:8px 12px;border-radius:0 5px 5px 0;font-size:11px;color:#7a9abf;margin-top:8px;font-family:monospace;line-height:1.8}
+.btn-primary{width:100%;padding:10px;background:#1a3560;border:1px solid #2a5090;border-radius:6px;color:#90c0ff;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
+.btn-primary:hover{background:#1e3f70}
+.btn-secondary{width:100%;padding:8px;background:#0c1018;border:1px solid #2a3347;border-radius:6px;color:#7a8aaa;font-size:12px;cursor:pointer;margin-top:8px}
+.btn-secondary:hover{color:#c8d8f0;border-color:#3d5070}
+.nota{font-size:10px;color:#4a5a70;margin-top:6px;line-height:1.5}
+.tipo-toggle{display:flex;gap:8px;margin-bottom:12px}
+.tipo-btn{flex:1;padding:6px;border-radius:5px;border:1px solid #2a3347;background:#0c1018;color:#7a8aaa;cursor:pointer;font-size:12px;font-weight:600;text-align:center}
+.tipo-btn.active{background:#1a2840;color:#5b9cf6;border-color:#2a5090}
+.sep{height:1px;background:#1e2535;margin:12px 0;border:none}
+.pozo-svg-wrap{display:flex;justify-content:center;margin:14px 0 6px}
+.memo{background:#080c10;border:1px solid #1a2535;border-radius:6px;padding:14px;font-family:monospace;font-size:11px;color:#7a9abf;white-space:pre-wrap;max-height:260px;overflow-y:auto;line-height:1.7}
+.highlight-row td{background:#101820}
+</style>
+</head>
+<body>
+<h1 class="app-title">Calculador — Pozo de Bombeo de Aguas Fecales</h1>
+<div class="subtitle"><span class="badge">CTE DB-HS5</span>&nbsp; Tabla 4.1 · UD → Qap · Vu · Ciclo · Geometría</div>
+
+<!-- ═══ MÓDULO 1 ═══ -->
+<div class="section">
+  <h2>Módulo 1 — Caudal de aporte por Unidades de Descarga (UD)</h2>
+  <div class="tipo-toggle">
+    <div class="tipo-btn active" id="btn-priv" onclick="setUso('privado')">Uso privado</div>
+    <div class="tipo-btn" id="btn-pub" onclick="setUso('publico')">Uso público</div>
+  </div>
+  <table class="aparatos">
+    <thead>
+      <tr>
+        <th style="width:30%">Aparato sanitario</th>
+        <th style="width:18%">Subtipo</th>
+        <th style="width:9%;text-align:center">UD priv.</th>
+        <th style="width:9%;text-align:center">UD públ.</th>
+        <th style="width:9%;text-align:center">UD aplic.</th>
+        <th style="width:10%;text-align:center">Cantidad</th>
+        <th style="width:10%;text-align:center">UD parcial</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-aparatos"></tbody>
+    <tfoot>
+      <tr class="ud-total-row">
+        <td colspan="6">Total UD acumuladas</td>
+        <td id="td-total-ud" style="text-align:center;font-size:14px;color:#5be3a0">0</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="nota">* Guión (—): valor no aplica según CTE DB-HS5 tabla 4.1. Desagües continuos: 1 UD por cada 0,03 dm³/s.</div>
+  <div style="margin-top:14px" class="grid3">
+    <div class="result-card">
+      <div class="val" id="res-ud-m1">0</div><div class="lbl">UD totales</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-qap-m1">—<span class="unit">l/s</span></div><div class="lbl">Q aporte Q<sub>ap</sub></div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-qap-m3h">—<span class="unit">m³/h</span></div><div class="lbl">Q aporte Q<sub>ap</sub></div>
+    </div>
+  </div>
+  <div class="formula-box">Q_ap = K · √UD_totales &nbsp;→&nbsp; K = 0,5 (uso privado/público)
+Resultado: Q_ap = 0,5 · √<span id="fml-ud">0</span> = <span id="fml-qap">0,000</span> l/s</div>
+</div>
+
+<!-- ═══ MÓDULO 2 ═══ -->
+<div class="section">
+  <h2>Módulo 2 — Volumen útil del pozo (Vu)</h2>
+  <div class="formula-box" style="margin-bottom:14px">
+    Q_bomba = 1,25 · Q_ap &nbsp;|&nbsp; Vu = Q_bomba(m³/h) / (4 · n_max) &nbsp;[Grundfos / KSB / Flygt]
+  </div>
+  <div class="grid3">
+    <div>
+      <label>Q aporte Q<sub>ap</sub> (l/s) — desde Módulo 1</label>
+      <input type="number" id="inp-qap" min="0" step="0.001" value="0" readonly>
+    </div>
+    <div>
+      <label>N.º máx. arranques/hora n<sub>max</sub></label>
+      <input type="number" id="inp-nmax" min="1" max="30" step="1" value="10" oninput="calcVu()">
+      <div class="nota">Típico fabricante: 6–15 arr/h</div>
+    </div>
+    <div>
+      <label>Diámetro interior del pozo (m)</label>
+      <input type="number" id="inp-diam" min="0.5" max="5" step="0.1" value="1.2" oninput="calcVu()">
+    </div>
+  </div>
+  <div style="margin-top:14px" class="grid3">
+    <div class="result-card">
+      <div class="val blue" id="res-qap-ls2">—</div><div class="lbl">Q aporte (l/s)</div>
+    </div>
+    <div class="result-card">
+      <div class="val blue" id="res-qb-m3h">—</div><div class="lbl">Q bomba Q<sub>b</sub> (m³/h)</div>
+    </div>
+    <div class="result-card">
+      <div class="val blue" id="res-qb-ls">—</div><div class="lbl">Q bomba Q<sub>b</sub> (l/s)</div>
+    </div>
+  </div>
+  <div style="margin-top:12px" class="grid3">
+    <div class="result-card">
+      <div class="val" id="res-vu-calc">—</div><div class="lbl">Vu calculado (m³)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-vu-l">—</div><div class="lbl">Vu calculado (litros)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-h-util">—</div><div class="lbl">Altura útil H<sub>n</sub> (m)</div>
+    </div>
+  </div>
+  <div id="res-vu-warn" style="display:none"></div>
+  <!-- alias para compatibilidad con calcCiclo y calcGeom -->
+  <span id="res-vu-m3" style="display:none"></span>
+  <div class="nota" style="margin-top:8px">Vu se calcula directamente con la fórmula de fabricantes sin aplicar mínimo. Toda la cadena (Hn, ciclo, geometría) usa este valor.</div>
+</div>
+
+<!-- ═══ MÓDULO 3 ═══ -->
+<div class="section">
+  <h2>Módulo 3 — Ciclo de bombeo y verificación de arranques</h2>
+  <div class="grid2">
+    <div>
+      <label>Q bomba Q<sub>b</sub> (l/s) — desde Módulo 2</label>
+      <input type="number" id="inp-qb" min="0.1" step="0.001" value="0" readonly>
+    </div>
+    <div>
+      <label>N.º máx. arranques/hora admisible</label>
+      <input type="number" id="inp-nmax2" min="1" max="30" step="1" value="10" oninput="calcCiclo()">
+    </div>
+  </div>
+  <div style="margin-top:14px" class="grid2">
+    <div class="result-card">
+      <div class="val" id="res-t-ll">—</div><div class="lbl">Tiempo llenado t<sub>ll</sub> (min)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-t-v">—</div><div class="lbl">Tiempo vaciado t<sub>v</sub> (min)</div>
+    </div>
+  </div>
+  <div style="margin-top:12px" class="grid3">
+    <div class="result-card">
+      <div class="val" id="res-t-ciclo">—</div><div class="lbl">T ciclo total (min)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-n-real">—</div><div class="lbl">n real (arr/h)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" id="res-status">—</div><div class="lbl">Verificación n</div>
+    </div>
+  </div>
+  <div class="formula-box" style="margin-top:10px">
+t_ll = Vu / Q_ap(m³/s) / 60 &nbsp;|&nbsp; t_v = Vu / (Q_b - Q_ap)(m³/s) / 60 &nbsp;|&nbsp; T = t_ll + t_v &nbsp;|&nbsp; n_real = 60/T
+  </div>
+</div>
+
+<!-- ═══ MÓDULO 4 ═══ -->
+<div class="section">
+  <h2>Módulo 4 — Geometría total del pozo</h2>
+  <div class="pozo-svg-wrap">
+    <svg id="pozo-svg" viewBox="0 0 300 340" width="260" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px">
+      <!-- fondo -->
+      <rect width="300" height="340" fill="#0a0e14"/>
+      <!-- paredes pozo -->
+      <rect x="40" y="30" width="180" height="280" fill="#1a2535" stroke="#2a3d60" stroke-width="1.5" rx="2"/>
+      <!-- zona H1 (bajo bomba) -->
+      <rect id="svg-h1" x="41" y="270" width="178" height="39" fill="#0d1f0f"/>
+      <!-- zona Hn (útil) -->
+      <rect id="svg-hn" x="41" y="160" width="178" height="110" fill="#1a3020"/>
+      <!-- zona H2 (seguridad) -->
+      <rect id="svg-h2" x="41" y="100" width="178" height="60" fill="#2a3510"/>
+      <!-- zona h (enterramiento) -->
+      <rect id="svg-h" x="41" y="31" width="178" height="69" fill="#2a2010" opacity="0.5"/>
+      <!-- suelo -->
+      <rect x="0" y="30" width="300" height="8" fill="#3a3020"/>
+      <text x="150" y="24" text-anchor="middle" fill="#a09070" font-size="10" font-family="sans-serif">Nivel de suelo</text>
+      <!-- tubería entrada -->
+      <rect x="180" y="95" width="60" height="8" fill="#3a5070" rx="2"/>
+      <rect x="195" y="75" width="8" height="28" fill="#3a5070" rx="1"/>
+      <!-- bomba -->
+      <rect x="90" y="278" width="40" height="22" fill="#1a4060" stroke="#2a6090" stroke-width="1" rx="3"/>
+      <text x="110" y="292" text-anchor="middle" fill="#5b9cf6" font-size="9" font-family="sans-serif">BOMBA</text>
+      <!-- cotas derecha -->
+      <line x1="228" y1="309" x2="228" y2="270" stroke="#556070" stroke-width="0.8" stroke-dasharray="3,2"/>
+      <line x1="228" y1="270" x2="228" y2="160" stroke="#5be3a0" stroke-width="1.2"/>
+      <line x1="228" y1="160" x2="228" y2="100" stroke="#f5c518" stroke-width="1.2"/>
+      <line x1="228" y1="100" x2="228" y2="31"  stroke="#f08030" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <!-- flechas cota -->
+      <text x="238" y="295" fill="#556070" font-size="9" font-family="sans-serif">H₁</text>
+      <text x="238" y="220" fill="#5be3a0" font-size="9" font-family="sans-serif">Hn</text>
+      <text x="238" y="134" fill="#f5c518" font-size="9" font-family="sans-serif">H₂</text>
+      <text x="238" y="65"  fill="#f08030" font-size="9" font-family="sans-serif">h</text>
+      <!-- Ht brace -->
+      <line x1="260" y1="309" x2="260" y2="31" stroke="#c080f0" stroke-width="1"/>
+      <text x="272" y="180" fill="#c080f0" font-size="9" font-family="sans-serif">Ht</text>
+      <!-- nivel max / min -->
+      <line x1="41" y1="160" x2="219" y2="160" stroke="#5be3a0" stroke-width="0.8" stroke-dasharray="4,3"/>
+      <text x="44" y="157" fill="#5be3a0" font-size="8" font-family="sans-serif">Nivel máx.</text>
+      <line x1="41" y1="270" x2="219" y2="270" stroke="#556070" stroke-width="0.8" stroke-dasharray="4,3"/>
+      <text x="44" y="267" fill="#556070" font-size="8" font-family="sans-serif">Nivel mín.</text>
+    </svg>
+  </div>
+
+  <div class="grid2" style="margin-bottom:12px">
+    <div>
+      <label>H₁ — Altura bajo nivel mínimo / base bomba (m)</label>
+      <input type="number" id="inp-h1" min="0" step="0.05" value="0.30" oninput="calcGeom()">
+      <div class="nota">Espacio entre fondo y nivel de parada de bomba. Típico: 0,20–0,50 m</div>
+    </div>
+    <div>
+      <label>H₂ — Altura de seguridad sobre nivel máximo (m)</label>
+      <input type="number" id="inp-h2" min="0" step="0.05" value="0.30" oninput="calcGeom()">
+      <div class="nota">Resguardo hasta la tubería de entrada. Típico: 0,20–0,50 m</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <label>h — Profundidad de enterramiento / solera (m)</label>
+      <input type="number" id="inp-h-ent" min="0" step="0.05" value="0.20" oninput="calcGeom()">
+      <div class="nota">Espesor de losa + relleno sobre la tapa. Típico: 0,10–0,30 m</div>
+    </div>
+    <div>
+      <label>Altura útil H<sub>n</sub> calculada (m) — desde Módulo 2</label>
+      <input type="number" id="inp-hn-geom" min="0" step="0.01" value="0" readonly>
+    </div>
+  </div>
+  <hr class="sep">
+  <div class="grid4">
+    <div class="result-card">
+      <div class="val" id="res-hn-g">—</div><div class="lbl">H<sub>n</sub> útil (m)</div>
+    </div>
+    <div class="result-card">
+      <div class="val amber" id="res-h1-g">—</div><div class="lbl">H₁ base (m)</div>
+    </div>
+    <div class="result-card">
+      <div class="val amber" id="res-h2-g">—</div><div class="lbl">H₂ seguridad (m)</div>
+    </div>
+    <div class="result-card">
+      <div class="val" style="color:#c080f0" id="res-ht-g">—</div><div class="lbl">H<sub>t</sub> total (m)</div>
+    </div>
+  </div>
+  <div class="formula-box" style="margin-top:10px">Ht = H₁ + Hn + H₂ + h &nbsp;→&nbsp; Profundidad total del pozo desde nivel de suelo</div>
+  <div class="nota" style="margin-top:6px">H<sub>t</sub> no incluye el espesor de losa de cubierta. Verificar con el fabricante el espacio mínimo para extracción de bomba sumergida.</div>
+</div>
+
+<!-- ═══ MEMORIA ═══ -->
+<div class="section">
+  <h2>Memoria de cálculo</h2>
+  <div class="memo" id="memo-text">— Pulsa "Actualizar memoria" para generar el resumen de cálculo —</div>
+  <button class="btn-primary" onclick="generarMemoria()">↻ Actualizar memoria de cálculo</button>
+  <button class="btn-secondary" onclick="exportarPDF()">⬇ Exportar memoria en PDF</button>
+</div>
+
+<script>
+const aparatos=[
+  {id:1,nombre:'Lavabo',subtipo:'—',udP:1,udPub:2,qmin:0.065},
+  {id:2,nombre:'Bidé',subtipo:'—',udP:2,udPub:3,qmin:0.065},
+  {id:3,nombre:'Ducha',subtipo:'—',udP:2,udPub:3,qmin:0.10},
+  {id:4,nombre:'Bañera (con o sin ducha)',subtipo:'—',udP:3,udPub:4,qmin:0.20},
+  {id:5,nombre:'Inodoro',subtipo:'Con cisterna',udP:4,udPub:5,qmin:0.10},
+  {id:6,nombre:'Inodoro',subtipo:'Con fluxómetro',udP:8,udPub:10,qmin:1.25},
+  {id:7,nombre:'Urinario',subtipo:'Pedestal',udP:null,udPub:4,qmin:0.50},
+  {id:8,nombre:'Urinario',subtipo:'Suspendido',udP:null,udPub:2,qmin:0.04},
+  {id:9,nombre:'Urinario',subtipo:'En batería',udP:null,udPub:3.5,qmin:0.04},
+  {id:10,nombre:'Fregadero',subtipo:'De cocina',udP:3,udPub:6,qmin:0.20},
+  {id:11,nombre:'Fregadero',subtipo:'Laboratorio/restaurante',udP:null,udPub:2,qmin:0.50},
+  {id:12,nombre:'Lavadero',subtipo:'—',udP:3,udPub:null,qmin:0.20},
+  {id:13,nombre:'Vertedero',subtipo:'—',udP:null,udPub:8,qmin:null},
+  {id:14,nombre:'Fuente para beber',subtipo:'—',udP:null,udPub:0.5,qmin:0.05},
+  {id:15,nombre:'Sumidero sifónico',subtipo:'—',udP:1,udPub:3,qmin:0.05},
+  {id:16,nombre:'Lavavajillas',subtipo:'—',udP:3,udPub:6,qmin:0.15},
+  {id:17,nombre:'Lavadora',subtipo:'—',udP:3,udPub:6,qmin:0.20},
+  {id:18,nombre:'Cuarto de baño (lav+inod+bañ+bidé)',subtipo:'Inodoro con cisterna',udP:7,udPub:null,qmin:null},
+  {id:19,nombre:'Cuarto de baño (lav+inod+bañ+bidé)',subtipo:'Inodoro con fluxómetro',udP:8,udPub:null,qmin:null},
+  {id:20,nombre:'Cuarto de aseo (lav+inod+ducha)',subtipo:'Inodoro con cisterna',udP:6,udPub:null,qmin:null},
+  {id:21,nombre:'Cuarto de aseo (lav+inod+ducha)',subtipo:'Inodoro con fluxómetro',udP:8,udPub:null,qmin:null},
+];
+let uso='privado';
+let cant={};
+aparatos.forEach(a=>cant[a.id]=0);
+
+function setUso(u){
+  uso=u;
+  document.getElementById('btn-priv').classList.toggle('active',u==='privado');
+  document.getElementById('btn-pub').classList.toggle('active',u==='publico');
+  renderTabla();
+}
+
+function renderTabla(){
+  const tb=document.getElementById('tbody-aparatos');
+  tb.innerHTML='';
+  aparatos.forEach(a=>{
+    const udP=a.udP!==null?a.udP:'—';
+    const udPb=a.udPub!==null?a.udPub:'—';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${a.nombre}</td><td class="subtipo">${a.subtipo}</td>
+      <td class="udv">${udP}</td><td class="udv">${udPb}</td>
+      <td class="udv" id="uda-${a.id}">—</td>
+      <td><input type="number" min="0" step="1" value="${cant[a.id]||0}" oninput="setCant(${a.id},this.value)"></td>
+      <td class="udv" id="par-${a.id}" style="color:#5be3a0">0</td>`;
+    tb.appendChild(tr);
+  });
+  calcUD();
+}
+
+function setCant(id,v){cant[id]=parseInt(v)||0;calcUD();}
+
+function calcUD(){
+  let totalUD=0;
+  aparatos.forEach(a=>{
+    const ud=uso==='privado'?a.udP:a.udPub;
+    const udV=ud!==null?ud:0;
+    const c=cant[a.id]||0;
+    const p=udV*c;
+    totalUD+=p;
+    const eA=document.getElementById('uda-'+a.id);
+    const eP=document.getElementById('par-'+a.id);
+    if(eA) eA.textContent=ud!==null?ud:'—';
+    if(eP) eP.textContent=p>0?p.toFixed(p%1===0?0:1):'0';
+  });
+  totalUD=parseFloat(totalUD.toFixed(2));
+  document.getElementById('td-total-ud').textContent=totalUD;
+  document.getElementById('res-ud-m1').textContent=totalUD;
+
+  let qap=0;
+  if(totalUD>0) qap=0.5*Math.sqrt(totalUD);
+  const qapM3h=qap*3.6;
+
+  document.getElementById('res-qap-m1').innerHTML=`${qap.toFixed(3)}<span class="unit">l/s</span>`;
+  document.getElementById('res-qap-m3h').innerHTML=`${qapM3h.toFixed(3)}<span class="unit">m³/h</span>`;
+  document.getElementById('fml-ud').textContent=totalUD;
+  document.getElementById('fml-qap').textContent=qap.toFixed(3);
+
+  // propagar al módulo 2
+  const inp=document.getElementById('inp-qap');
+  inp.value=qap.toFixed(4);
+  calcVu();
+}
+
+function calcVu(){
+  const qap_ls=parseFloat(document.getElementById('inp-qap').value)||0;
+  const nmax=parseInt(document.getElementById('inp-nmax').value)||10;
+  const diam=parseFloat(document.getElementById('inp-diam').value)||1.2;
+
+  document.getElementById('res-qap-ls2').textContent=qap_ls.toFixed(3);
+
+  if(qap_ls<=0){
+    ['res-qb-m3h','res-qb-ls','res-vu-m3','res-vu-l','res-h-util'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('inp-qb').value=0;
+    document.getElementById('inp-hn-geom').value=0;
+    calcCiclo(); calcGeom(); return;
+  }
+
+  const qap_m3h=qap_ls*3.6;
+  const qb_m3h=1.25*qap_m3h;
+  const qb_ls=qb_m3h/3.6;
+  const vu=qb_m3h/(4*nmax); // Vu calculado real, sin mínimo
+  const area=Math.PI*(diam/2)**2;
+  const hn=vu/area;
+
+  document.getElementById('res-qb-m3h').textContent=qb_m3h.toFixed(3);
+  document.getElementById('res-qb-ls').textContent=qb_ls.toFixed(3);
+  document.getElementById('res-vu-calc').textContent=vu.toFixed(3);
+  document.getElementById('res-vu-m3').textContent=vu.toFixed(3);
+  document.getElementById('res-vu-l').textContent=(vu*1000).toFixed(1);
+  document.getElementById('res-h-util').textContent=hn.toFixed(3);
+  // ocultar aviso siempre
+  const warn=document.getElementById('res-vu-warn');
+  if(warn) warn.style.display='none';
+
+  document.getElementById('inp-qb').value=qb_ls.toFixed(4);
+  document.getElementById('inp-hn-geom').value=hn.toFixed(3);
+  calcCiclo(); calcGeom();
+}
+
+function calcCiclo(){
+  const qap_ls=parseFloat(document.getElementById('inp-qap').value)||0;
+  const qb_ls=parseFloat(document.getElementById('inp-qb').value)||0;
+  const nmax2=parseInt(document.getElementById('inp-nmax2').value)||10;
+  const vu=parseFloat(document.getElementById('res-vu-m3').textContent)||0;
+  const dash='—';
+
+  if(qap_ls<=0||qb_ls<=qap_ls||vu<=0){
+    ['res-t-ll','res-t-v','res-t-ciclo','res-n-real'].forEach(id=>document.getElementById(id).textContent=dash);
+    document.getElementById('res-status').textContent=dash;
+    return;
+  }
+  const qe=qap_ls/1000; const qb=qb_ls/1000;
+  const tll=(vu/qe)/60;
+  const tv=(vu/(qb-qe))/60;
+  const T=tll+tv;
+  const nr=60/T;
+
+  document.getElementById('res-t-ll').textContent=tll.toFixed(2);
+  document.getElementById('res-t-v').textContent=tv.toFixed(2);
+  document.getElementById('res-t-ciclo').textContent=T.toFixed(2);
+  document.getElementById('res-n-real').textContent=nr.toFixed(1);
+  const el=document.getElementById('res-status');
+  el.innerHTML=nr<=nmax2?'<span class="status ok">✓ CUMPLE</span>':'<span class="status err">✗ EXCEDE</span>';
+}
+
+function calcGeom(){
+  const hn=parseFloat(document.getElementById('inp-hn-geom').value)||0;
+  const h1=parseFloat(document.getElementById('inp-h1').value)||0;
+  const h2=parseFloat(document.getElementById('inp-h2').value)||0;
+  const hEnt=parseFloat(document.getElementById('inp-h-ent').value)||0;
+  const ht=h1+hn+h2+hEnt;
+
+  document.getElementById('res-hn-g').textContent=hn.toFixed(3);
+  document.getElementById('res-h1-g').textContent=h1.toFixed(2);
+  document.getElementById('res-h2-g').textContent=h2.toFixed(2);
+  document.getElementById('res-ht-g').textContent=ht.toFixed(3);
+  updateSVG(h1,hn,h2,hEnt,ht);
+}
+
+function updateSVG(h1,hn,h2,hEnt,ht){
+  if(ht<=0) return;
+  const total=280; const base=309;
+  const pH1=h1/ht; const pHn=hn/ht; const pH2=h2/ht; const ph=hEnt/ht;
+  const yH1=base-total*pH1;
+  const yHn=yH1-total*pHn;
+  const yH2=yHn-total*pH2;
+  const rH1=document.getElementById('svg-h1');
+  const rHn=document.getElementById('svg-hn');
+  const rH2=document.getElementById('svg-h2');
+  const rh=document.getElementById('svg-h');
+  function setR(el,y1,y2){el.setAttribute('y',Math.min(y1,y2));el.setAttribute('height',Math.abs(y2-y1));}
+  setR(rH1,yH1,base); setR(rHn,yHn,yH1); setR(rH2,yH2,yHn); setR(rh,31,yH2);
+  // actualizar líneas cota en SVG
+  const svg=document.getElementById('pozo-svg');
+  ['l-h1','l-hn','l-h2','l-h'].forEach(id=>{const e=svg.getElementById?svg.querySelector('#'+id):null;if(e)e.remove();});
+}
+
+function generarMemoria(){
+  const ud=document.getElementById('res-ud-m1').textContent;
+  const qap=document.getElementById('res-qap-m1').textContent.replace(/[^\d.,]/g,'');
+  const qapM=document.getElementById('res-qap-m3h').textContent.replace(/[^\d.,]/g,'');
+  const qbM=document.getElementById('res-qb-m3h').textContent;
+  const qbL=document.getElementById('res-qb-ls').textContent;
+  const nmax=document.getElementById('inp-nmax').value;
+  const diam=document.getElementById('inp-diam').value;
+  const vu=document.getElementById('res-vu-m3').textContent;
+  const vuL=document.getElementById('res-vu-l').textContent;
+  const hn=document.getElementById('res-h-util').textContent;
+  const tll=document.getElementById('res-t-ll').textContent;
+  const tv=document.getElementById('res-t-v').textContent;
+  const tc=document.getElementById('res-t-ciclo').textContent;
+  const nr=document.getElementById('res-n-real').textContent;
+  const nmax2=document.getElementById('inp-nmax2').value;
+  const h1=document.getElementById('inp-h1').value;
+  const h2=document.getElementById('inp-h2').value;
+  const hEnt=document.getElementById('inp-h-ent').value;
+  const ht=document.getElementById('res-ht-g').textContent;
+  const fecha=new Date().toLocaleDateString('es-ES');
+
+  let lineas=[];
+  aparatos.forEach(a=>{
+    const ud2=uso==='privado'?a.udP:a.udPub;
+    const c=cant[a.id]||0;
+    if(c>0&&ud2!==null) lineas.push(`    · ${a.nombre} (${a.subtipo}) × ${c} → ${(ud2*c).toFixed(1)} UD`);
+  });
+
+  const memo=`══════════════════════════════════════════════════════════════
+  MEMORIA DE CÁLCULO — POZO DE BOMBEO DE AGUAS FECALES
+  Normativa: CTE DB-HS5 (Tabla 4.1)   Fecha: ${fecha}
+══════════════════════════════════════════════════════════════
+
+MÓDULO 1 — CAUDAL DE APORTE POR UNIDADES DE DESCARGA
+─────────────────────────────────────────────────────
+  Tipo de uso : ${uso.toUpperCase()}
+
+  Aparatos sanitarios:
+${lineas.length?lineas.join('\n'):'    (sin aparatos)'}
+
+  Total UD acumuladas : ${ud} UD
+  Fórmula : Q_ap = 0,5 · √${ud} = ${qap} l/s
+  Caudal de aporte    : Q_ap = ${qap} l/s  (${qapM} m³/h)
+
+MÓDULO 2 — VOLUMEN ÚTIL DEL POZO
+─────────────────────────────────────────────────────
+  Q bomba = 1,25 · Q_ap = 1,25 × ${qap} l/s = ${qbL} l/s  (${qbM} m³/h)
+  N.º máx. arranques   : n_max = ${nmax} arr/h
+  Diámetro interior    : Ø = ${diam} m
+  Área sección         : A = π·(${diam}/2)² = ${(Math.PI*(parseFloat(diam)/2)**2).toFixed(4)} m²
+
+  Fórmula (Grundfos/KSB/Flygt):
+    Vu = Q_b(m³/h) / (4·n_max) = ${qbM} / (4×${nmax}) = ${vu} m³
+  → Vu aplicado (≥1 m³) : ${vu} m³  (${vuL} litros)
+  → Altura útil Hn       : ${hn} m
+
+MÓDULO 3 — CICLO DE BOMBEO
+─────────────────────────────────────────────────────
+  Q aporte Q_ap = ${qap} l/s  |  Q bomba Q_b = ${qbL} l/s  |  Vu = ${vu} m³
+
+  t_llenado = Vu / Q_ap(m³/s) / 60   = ${tll} min
+  t_vaciado = Vu / (Q_b−Q_ap)(m³/s) / 60 = ${tv} min
+  T ciclo total = t_ll + t_v          = ${tc} min
+  n real = 60/T                       = ${nr} arr/h
+  n_max admisible                     = ${nmax2} arr/h
+  Resultado : ${parseFloat(nr)<=parseFloat(nmax2)?'✓ CUMPLE (n_real ≤ n_max)':'✗ NO CUMPLE — revisar Vu o Q_b'}
+
+MÓDULO 4 — GEOMETRÍA TOTAL DEL POZO
+─────────────────────────────────────────────────────
+  H₁  (base bomba / nivel mínimo)   = ${h1} m
+  Hn  (altura útil)                 = ${hn} m
+  H₂  (seguridad sobre nivel máx.)  = ${h2} m
+  h   (profundidad enterramiento)   = ${hEnt} m
+  ─────────────────────────────────────────
+  Ht  PROFUNDIDAD TOTAL DEL POZO   = ${ht} m
+
+══════════════════════════════════════════════════════════════
+  Calc Pozo Fecales v2.0  ·  CTE DB-HS5  ·  ${fecha}
+══════════════════════════════════════════════════════════════`.trim();
+
+  document.getElementById('memo-text').textContent=memo;
+  return memo;
+}
+
+function exportarPDF(){
+  const memo=generarMemoria();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const margin=18;
+  const pageW=doc.internal.pageSize.getWidth();
+  const pageH=doc.internal.pageSize.getHeight();
+  const usableW=pageW-margin*2;
+
+  doc.setFillColor(15,17,23);
+  doc.rect(0,0,pageW,pageH,'F');
+
+  doc.setFont('courier','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(200,216,240);
+  doc.text('POZO DE BOMBEO DE AGUAS FECALES',pageW/2,16,{align:'center'});
+  doc.setFontSize(8);
+  doc.setTextColor(85,96,112);
+  doc.text('Normativa: CTE DB-HS5  ·  Calc Pozo Fecales v2.0',pageW/2,22,{align:'center'});
+
+  doc.setDrawColor(30,37,53);
+  doc.setLineWidth(0.3);
+  doc.line(margin,25,pageW-margin,25);
+
+  doc.setFont('courier','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(122,154,191);
+
+  const lines=memo.split('\n');
+  let y=32;
+  const lineH=4.2;
+
+  lines.forEach(ln=>{
+    if(y>pageH-12){
+      doc.addPage();
+      doc.setFillColor(15,17,23);
+      doc.rect(0,0,pageW,pageH,'F');
+      y=14;
+    }
+    const isHeader=ln.startsWith('══')||ln.startsWith('MÓDULO')||ln.startsWith('─');
+    if(isHeader){
+      doc.setTextColor(91,157,246);
+      doc.setFont('courier','bold');
+    } else {
+      doc.setTextColor(122,154,191);
+      doc.setFont('courier','normal');
+    }
+    const wrapped=doc.splitTextToSize(ln,usableW);
+    doc.text(wrapped,margin,y);
+    y+=lineH*wrapped.length;
+  });
+
+  doc.setDrawColor(30,37,53);
+  doc.line(margin,pageH-10,pageW-margin,pageH-10);
+  doc.setFontSize(6.5);
+  doc.setTextColor(74,90,112);
+  const fecha=new Date().toLocaleDateString('es-ES');
+  doc.text(`Generado: ${fecha}  ·  CTE DB-HS5`,margin,pageH-6);
+  doc.text(`Página 1 de ${doc.internal.getNumberOfPages()}`,pageW-margin,pageH-6,{align:'right'});
+
+  doc.save('Memoria_Pozo_Fecales.pdf');
+}
+
+renderTabla();
+calcGeom();
+</script>
+</body>
+</html>
