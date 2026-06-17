@@ -1,6 +1,6 @@
 # Calc Pozo Fecales
 ### Calculador de Pozo de Bombeo de Aguas Residuales Fecales
-**Versión actual:** v2.2 | **Normativa:** CTE DB-HS5 (Tabla 4.1) | **Tecnología:** HTML5 + JS (autocontenido)
+**Versión actual:** v2.3 | **Normativa:** CTE DB-HS5 (Tabla 4.1) | **Tecnología:** HTML5 + JS (autocontenido)
 
 ---
 
@@ -102,6 +102,18 @@ La herramienta es un archivo HTML autocontenido, sin dependencias externas de se
 ---
 
 ## Bitácora de desarrollo
+
+### v2.3 — 2026-06-17
+**Cambios — Exportación PDF corporativa ELECNOR:**
+- Rediseño completo del PDF con identidad corporativa ELECNOR: azul `#003087` + naranja `#F5A800`.
+- Cabecera corporativa con banda azul, franja naranja, símbolo de rayo, logotipo textual y referencia normativa.
+- Pie de página en banda azul con numeración de páginas y aviso de uso interno.
+- Módulo 1: tabla de aparatos con filas alternas, cabecera en azul claro, tres cajas de resultado (UD totales, Qap en l/s y m³/h).
+- Módulo 2: tabla de parámetros + tres cajas de resultado (Vu m³, Vu litros, Hn m). Fórmulas en pie de bloque.
+- Módulo 3: cuatro cajas de resultado (t_ll, t_v, T, n_real) + caja de verificación verde/roja con resultado CUMPLE/NO CUMPLE.
+- Módulo 4: diagrama esquemático proporcional del pozo generado con jsPDF (zonas h/H₂/Hn/H₁ en colores diferenciados, cotas laterales, braquete Ht) + tabla de alturas con fila resumen en azul/naranja.
+- Paginación automática con cabecera y pie repetidos en todas las páginas.
+- Archivo guardado como `Informe_Pozo_Fecales_ELECNOR.pdf`.
 
 ### v2.2 — 2026-06-16
 **Cambios:**

@@ -549,66 +549,427 @@ MÓDULO 4 — GEOMETRÍA TOTAL DEL POZO
 }
 
 function exportarPDF(){
-  const memo=generarMemoria();
+  generarMemoria();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const margin=18;
-  const pageW=doc.internal.pageSize.getWidth();
-  const pageH=doc.internal.pageSize.getHeight();
-  const usableW=pageW-margin*2;
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+  const ML=14, MR=14, usableW=W-ML-MR;
+  const fecha=new Date().toLocaleDateString('es-ES');
 
-  doc.setFillColor(15,17,23);
-  doc.rect(0,0,pageW,pageH,'F');
+  // ── Colores ELECNOR ──
+  const AZUL    =[0,48,135];      // #003087 azul corporativo
+  const NARANJA =[245,168,0];     // #F5A800 naranja corporativo
+  const GRIS_OC =[45,55,72];      // texto oscuro
+  const GRIS_MD =[100,116,139];   // texto secundario
+  const GRIS_LT =[241,245,249];   // fondos filas alternas
+  const BLANCO  =[255,255,255];
+  const AZUL_LT =[230,236,248];   // fondo cabeceras tabla
 
-  doc.setFont('courier','bold');
-  doc.setFontSize(13);
-  doc.setTextColor(200,216,240);
-  doc.text('POZO DE BOMBEO DE AGUAS FECALES',pageW/2,16,{align:'center'});
-  doc.setFontSize(8);
-  doc.setTextColor(85,96,112);
-  doc.text('Normativa: CTE DB-HS5  ·  Calc Pozo Fecales v2.0',pageW/2,22,{align:'center'});
+  function addPageBg(){
+    doc.setFillColor(...BLANCO); doc.rect(0,0,W,H,'F');
+  }
 
-  doc.setDrawColor(30,37,53);
-  doc.setLineWidth(0.3);
-  doc.line(margin,25,pageW-margin,25);
+  // ══════════════════════════════════════
+  //  CABECERA corporativa
+  // ══════════════════════════════════════
+  function drawHeader(pageNum){
+    // banda azul superior
+    doc.setFillColor(...AZUL);
+    doc.rect(0,0,W,22,'F');
+    // franja naranja fina
+    doc.setFillColor(...NARANJA);
+    doc.rect(0,22,W,2.5,'F');
 
-  doc.setFont('courier','normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(122,154,191);
+    // símbolo rayo ELECNOR (simplificado en SVG-like con líneas)
+    doc.setFillColor(...NARANJA);
+    // rayo: polígono simple
+    const rx=ML, ry=3.5;
+    doc.triangle(rx,ry+12, rx+5,ry+2, rx+4,ry+8, 'F');
+    doc.triangle(rx+1,ry+8, rx+6,ry+18, rx+9,ry+8, 'F');
 
-  const lines=memo.split('\n');
-  let y=32;
-  const lineH=4.2;
+    // texto ELECNOR
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...BLANCO);
+    doc.text('ELECNOR',ML+13,13);
 
-  lines.forEach(ln=>{
-    if(y>pageH-12){
-      doc.addPage();
-      doc.setFillColor(15,17,23);
-      doc.rect(0,0,pageW,pageH,'F');
-      y=14;
+    // subtítulo cabecera
+    doc.setFontSize(7);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(180,200,235);
+    doc.text('Ingeniería de Instalaciones  ·  Oficina Técnica MEP',ML+13,18);
+
+    // título documento (derecha)
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...BLANCO);
+    doc.text('POZO DE BOMBEO — AGUAS FECALES',W-MR,10,{align:'right'});
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(180,200,235);
+    doc.text(`CTE DB-HS5  ·  Calc Pozo Fecales v2.2  ·  ${fecha}`,W-MR,16,{align:'right'});
+
+    if(pageNum>1){
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(6);
+      doc.setTextColor(160,180,210);
+      doc.text(`Página ${pageNum}`,W-MR,21,{align:'right'});
     }
-    const isHeader=ln.startsWith('══')||ln.startsWith('MÓDULO')||ln.startsWith('─');
-    if(isHeader){
-      doc.setTextColor(91,157,246);
-      doc.setFont('courier','bold');
-    } else {
-      doc.setTextColor(122,154,191);
-      doc.setFont('courier','normal');
+  }
+
+  // ══════════════════════════════════════
+  //  PIE DE PÁGINA
+  // ══════════════════════════════════════
+  function drawFooter(pageNum,total){
+    doc.setFillColor(...AZUL);
+    doc.rect(0,H-10,W,10,'F');
+    doc.setFillColor(...NARANJA);
+    doc.rect(0,H-10,W,1.5,'F');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(6);
+    doc.setTextColor(...BLANCO);
+    doc.text('Documento generado automáticamente · Solo para uso interno',ML,H-5);
+    doc.text(`Página ${pageNum} de ${total}`,W-MR,H-5,{align:'right'});
+  }
+
+  // ══════════════════════════════════════
+  //  Helpers texto
+  // ══════════════════════════════════════
+  let cy=0;
+  function ensureSpace(needed,pageArr){
+    if(cy+needed>H-14){
+      pageArr.push(doc.internal.getNumberOfPages()+1);
+      doc.addPage(); addPageBg();
+      drawHeader(doc.internal.getNumberOfPages());
+      cy=30;
     }
-    const wrapped=doc.splitTextToSize(ln,usableW);
-    doc.text(wrapped,margin,y);
-    y+=lineH*wrapped.length;
+  }
+
+  function sectionTitle(txt,pageArr){
+    ensureSpace(12,pageArr);
+    doc.setFillColor(...AZUL);
+    doc.rect(ML,cy,usableW,7,'F');
+    doc.setFillColor(...NARANJA);
+    doc.rect(ML,cy,3,7,'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...BLANCO);
+    doc.text(txt,ML+6,cy+5);
+    cy+=9;
+  }
+
+  function subTitle(txt){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...AZUL);
+    doc.text(txt,ML,cy);
+    cy+=5;
+  }
+
+  function row2col(lbl,val,alt,pageArr){
+    ensureSpace(6,pageArr);
+    if(alt){doc.setFillColor(...GRIS_LT);doc.rect(ML,cy-3.5,usableW,5.5,'F');}
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...GRIS_OC);
+    doc.text(lbl,ML+2,cy);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(...AZUL);
+    doc.text(String(val),W-MR,cy,{align:'right'});
+    cy+=5.5;
+  }
+
+  function resultBox(lbl,val,unit,x,y,bw,bh){
+    doc.setFillColor(...AZUL_LT);
+    doc.roundedRect(x,y,bw,bh,2,2,'F');
+    doc.setDrawColor(...NARANJA); doc.setLineWidth(0.5);
+    doc.line(x,y+bh-0.25,x+bw,y+bh-0.25);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...AZUL);
+    doc.text(String(val),x+bw/2,y+bh*0.52,{align:'center'});
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(6);
+    doc.setTextColor(...GRIS_MD);
+    doc.text(unit,x+bw/2,y+bh*0.75,{align:'center'});
+    doc.setFontSize(5.5);
+    doc.text(lbl,x+bw/2,y+bh-2,{align:'center'});
+  }
+
+  function hline(){
+    doc.setDrawColor(210,220,235); doc.setLineWidth(0.2);
+    doc.line(ML,cy,W-MR,cy); cy+=3;
+  }
+
+  function normBox(txt,pageArr){
+    ensureSpace(14,pageArr);
+    doc.setFillColor(255,251,235);
+    doc.setDrawColor(...NARANJA); doc.setLineWidth(0.4);
+    doc.roundedRect(ML,cy,usableW,10,2,2,'FD');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(120,80,0);
+    doc.text('📋 Base normativa:',ML+3,cy+4.5);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(80,60,0);
+    const wrapped=doc.splitTextToSize(txt,usableW-38);
+    doc.text(wrapped,ML+33,cy+4.5);
+    cy+=12;
+  }
+
+  // ══════════════════════════════════════
+  //  RECOLECTAR DATOS
+  // ══════════════════════════════════════
+  const ud       = document.getElementById('res-ud-m1').textContent;
+  const qapLs    = document.getElementById('res-qap-m1').textContent.replace(/[^\d.,]/g,'');
+  const qapM3h   = document.getElementById('res-qap-m3h').textContent.replace(/[^\d.,]/g,'');
+  const qbM3h    = document.getElementById('res-qb-m3h').textContent;
+  const qbLs     = document.getElementById('res-qb-ls').textContent;
+  const nmax     = document.getElementById('inp-nmax').value;
+  const diam     = document.getElementById('inp-diam').value;
+  const vuM3     = document.getElementById('res-vu-calc').textContent;
+  const vuL      = document.getElementById('res-vu-l').textContent;
+  const hn       = document.getElementById('res-h-util').textContent;
+  const tll      = document.getElementById('res-t-ll').textContent;
+  const tv       = document.getElementById('res-t-v').textContent;
+  const tc       = document.getElementById('res-t-ciclo').textContent;
+  const nr       = document.getElementById('res-n-real').textContent;
+  const nmax2    = document.getElementById('inp-nmax2').value;
+  const h1       = document.getElementById('inp-h1').value;
+  const h2       = document.getElementById('inp-h2').value;
+  const hEnt     = document.getElementById('inp-h-ent').value;
+  const ht       = document.getElementById('res-ht-g').textContent;
+  const cumple   = parseFloat(nr)<=parseFloat(nmax2);
+  const area     = (Math.PI*(parseFloat(diam)/2)**2).toFixed(4);
+
+  let aparLin=[];
+  aparatos.forEach(a=>{
+    const ud2=uso==='privado'?a.udP:a.udPub;
+    const c=cant[a.id]||0;
+    if(c>0&&ud2!==null) aparLin.push({n:a.nombre+' ('+a.subtipo+')',c,ud2,t:(ud2*c)});
   });
 
-  doc.setDrawColor(30,37,53);
-  doc.line(margin,pageH-10,pageW-margin,pageH-10);
-  doc.setFontSize(6.5);
-  doc.setTextColor(74,90,112);
-  const fecha=new Date().toLocaleDateString('es-ES');
-  doc.text(`Generado: ${fecha}  ·  CTE DB-HS5`,margin,pageH-6);
-  doc.text(`Página 1 de ${doc.internal.getNumberOfPages()}`,pageW-margin,pageH-6,{align:'right'});
+  // ══════════════════════════════════════
+  //  PÁGINA 1 — PORTADA + MÓDULO 1 + 2
+  // ══════════════════════════════════════
+  addPageBg(); drawHeader(1);
+  cy=30;
+  const pages=[1];
 
-  doc.save('Memoria_Pozo_Fecales.pdf');
+  // -- Descripción técnica breve --
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...GRIS_MD);
+  const desc='Informe de dimensionado de pozo de bombeo de aguas residuales fecales mediante el método de Unidades de Descarga (UD) según CTE DB-HS5, con determinación del caudal de aporte, volumen útil del pozo (fórmula de fabricantes Grundfos/KSB/Flygt), verificación del ciclo de bombeo y geometría total del pozo.';
+  const dlines=doc.splitTextToSize(desc,usableW);
+  doc.text(dlines,ML,cy); cy+=dlines.length*4+4;
+
+  normBox('CTE DB-HS5 Tabla 4.1 (UD por aparato sanitario)  ·  Vu = Qb(m³/h)/(4·nmax) [Grundfos/KSB/Flygt]  ·  Qap = 0,5·√UD',pages);
+
+  // ── MÓDULO 1 ──
+  sectionTitle('MÓDULO 1  —  CAUDAL DE APORTE POR UNIDADES DE DESCARGA (UD)',pages);
+  subTitle(`Tipo de uso: ${uso.toUpperCase()}`);
+
+  if(aparLin.length>0){
+    // cabecera tabla
+    ensureSpace(8,pages);
+    const cols=[ML,ML+68,ML+90,ML+112,ML+138];
+    const ch=6;
+    doc.setFillColor(...AZUL_LT);
+    doc.rect(ML,cy-4,usableW,ch,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...AZUL);
+    ['Aparato sanitario','UD unit.','Cant.','UD parcial'].forEach((h,i)=>{
+      doc.text(h,cols[i+1],cy-0.5);
+    });
+    doc.text('Aparato sanitario',cols[0],cy-0.5);
+    cy+=3;
+    aparLin.forEach((a,i)=>{
+      ensureSpace(6,pages);
+      if(i%2===0){doc.setFillColor(...GRIS_LT);doc.rect(ML,cy-3.5,usableW,5.5,'F');}
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_OC);
+      const nm=doc.splitTextToSize(a.n,60);
+      doc.text(nm,cols[0],cy);
+      doc.text(String(a.ud2),cols[1],cy);
+      doc.text(String(a.c),cols[2],cy);
+      doc.setFont('helvetica','bold'); doc.setTextColor(...AZUL);
+      doc.text(a.t.toFixed(1),cols[3],cy);
+      cy+=Math.max(nm.length*3.5,5.5);
+    });
+    cy+=2;
+  } else {
+    doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(...GRIS_MD);
+    doc.text('(Sin aparatos introducidos)',ML+2,cy); cy+=7;
+  }
+
+  // cajas resultado M1
+  ensureSpace(24,pages);
+  const bw=usableW/3-3, bh=18;
+  resultBox('UD TOTALES',ud,'—',ML,cy,bw,bh);
+  resultBox('Q APORTE',qapLs,'l/s',ML+bw+4.5,cy,bw,bh);
+  resultBox('Q APORTE',qapM3h,'m³/h',ML+(bw+4.5)*2,cy,bw,bh);
+  cy+=bh+6;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_MD);
+  doc.text(`Fórmula: Qap = 0,5 · √${ud} = ${qapLs} l/s   (CTE DB-HS5 / K=0,5)`,ML,cy); cy+=8;
+
+  // ── MÓDULO 2 ──
+  sectionTitle('MÓDULO 2  —  VOLUMEN ÚTIL DEL POZO (Vu)',pages);
+
+  row2col('Caudal de aporte Qap',`${qapLs} l/s`,false,pages);
+  row2col('Caudal de bomba Qb = 1,25 · Qap',`${qbLs} l/s  (${qbM3h} m³/h)`,true,pages);
+  row2col('N.º máx. arranques/hora n_max',`${nmax} arr/h`,false,pages);
+  row2col('Diámetro interior del pozo',`Ø ${diam} m  →  A = ${area} m²`,true,pages);
+  cy+=2; hline();
+
+  ensureSpace(24,pages);
+  const bw2=usableW/3-3;
+  resultBox('Vu CALCULADO',vuM3,'m³',ML,cy,bw2,bh);
+  resultBox('Vu CALCULADO',(parseFloat(vuM3)*1000).toFixed(1),'litros',ML+bw2+4.5,cy,bw2,bh);
+  resultBox('ALTURA ÚTIL Hn',hn,'m',ML+(bw2+4.5)*2,cy,bw2,bh);
+  cy+=bh+4;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_MD);
+  doc.text(`Fórmula (Grundfos/KSB/Flygt): Vu = Qb(m³/h) / (4·nmax) = ${qbM3h} / (4×${nmax}) = ${vuM3} m³`,ML,cy); cy+=4;
+  doc.text(`Hn = Vu / (π·(D/2)²) = ${vuM3} / ${area} = ${hn} m`,ML,cy); cy+=8;
+
+  // ══════════════════════════════════════
+  //  MÓDULO 3 + 4  (pueden quedar en pág 1 o saltar)
+  // ══════════════════════════════════════
+  sectionTitle('MÓDULO 3  —  CICLO DE BOMBEO Y VERIFICACIÓN',pages);
+
+  row2col('Caudal de aporte Qap',`${qapLs} l/s`,false,pages);
+  row2col('Caudal de bomba Qb',`${qbLs} l/s`,true,pages);
+  row2col('Volumen útil Vu',`${vuM3} m³`,false,pages);
+  cy+=2; hline();
+
+  ensureSpace(24,pages);
+  const bw3=usableW/4-2.5, bh3=18;
+  resultBox('t LLENADO',tll,'min',ML,cy,bw3,bh3);
+  resultBox('t VACIADO',tv,'min',ML+(bw3+3.3),cy,bw3,bh3);
+  resultBox('T CICLO',tc,'min',ML+(bw3+3.3)*2,cy,bw3,bh3);
+  resultBox('n REAL',nr,'arr/h',ML+(bw3+3.3)*3,cy,bw3,bh3);
+  cy+=bh3+5;
+
+  // resultado verificación
+  ensureSpace(12,pages);
+  const vColor=cumple?[16,120,60]:[180,30,30];
+  const vBg=cumple?[220,250,230]:[250,220,220];
+  doc.setFillColor(...vBg); doc.setDrawColor(...vColor); doc.setLineWidth(0.5);
+  doc.roundedRect(ML,cy,usableW,9,2,2,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...vColor);
+  const vTxt=cumple
+    ?`✓  CUMPLE  —  n_real = ${nr} arr/h  ≤  n_max = ${nmax2} arr/h`
+    :`✗  NO CUMPLE  —  n_real = ${nr} arr/h  >  n_max = ${nmax2} arr/h  →  Revisar Vu o Qb`;
+  doc.text(vTxt,W/2,cy+6,{align:'center'});
+  cy+=13;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_MD);
+  doc.text(`t_ll = Vu/Qap(m³/s)/60  |  t_v = Vu/(Qb−Qap)(m³/s)/60  |  T = t_ll+t_v  |  n_real = 60/T`,ML,cy); cy+=8;
+
+  // ── MÓDULO 4 ──
+  sectionTitle('MÓDULO 4  —  GEOMETRÍA TOTAL DEL POZO',pages);
+
+  // diagrama esquemático del pozo (SVG-like con jsPDF)
+  ensureSpace(60,pages);
+  const px=ML+2, pw=42, ph=52, pTop=cy;
+  // fondo pozo
+  doc.setFillColor(235,240,250); doc.setDrawColor(...AZUL); doc.setLineWidth(0.6);
+  doc.rect(px,pTop,pw,ph,'FD');
+
+  const hnV=parseFloat(hn)||0, h1V=parseFloat(h1)||0, h2V=parseFloat(h2)||0, hEntV=parseFloat(hEnt)||0;
+  const htV=parseFloat(ht)||1;
+  const scl=ph/htV;
+
+  // zona h (enterramiento) - arriba
+  const yH=pTop; const hHpx=hEntV*scl;
+  doc.setFillColor(200,185,150); doc.rect(px,yH,pw,hHpx,'F');
+  // zona H2
+  const yH2=yH+hHpx; const hH2px=h2V*scl;
+  doc.setFillColor(180,210,240); doc.rect(px,yH2,pw,hH2px,'F');
+  // zona Hn (útil)
+  const yHn=yH2+hH2px; const hHnpx=hnV*scl;
+  doc.setFillColor(140,190,220); doc.rect(px,yHn,pw,hHnpx,'F');
+  // zona H1
+  const yH1=yHn+hHnpx; const hH1px=h1V*scl;
+  doc.setFillColor(100,140,180); doc.rect(px,yH1,pw,hH1px,'F');
+
+  // borde encima
+  doc.setDrawColor(...AZUL); doc.setLineWidth(0.6);
+  doc.rect(px,pTop,pw,ph,'D');
+
+  // bomba
+  doc.setFillColor(...AZUL);
+  doc.roundedRect(px+pw/2-5,pTop+ph-hH1px/2-4,10,6,1,1,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(4.5); doc.setTextColor(...BLANCO);
+  doc.text('BOMBA',px+pw/2,pTop+ph-hH1px/2,{align:'center'});
+
+  // nivel máx / mín
+  doc.setDrawColor(...NARANJA); doc.setLineWidth(0.3);
+  doc.line(px,yHn,px+pw,yHn);
+  doc.line(px,yH1,px+pw,yH1);
+
+  // cotas derecha
+  const cx2=px+pw+3;
+  const cotas=[
+    {y1:pTop,y2:yH2,lbl:'h',col:GRIS_MD},
+    {y1:yH2,y2:yHn,lbl:'H₂',col:[60,120,200]},
+    {y1:yHn,y2:yH1,lbl:'Hn',col:AZUL},
+    {y1:yH1,y2:pTop+ph,lbl:'H₁',col:[30,80,150]},
+  ];
+  cotas.forEach(co=>{
+    doc.setDrawColor(...co.col); doc.setLineWidth(0.4);
+    doc.line(cx2,co.y1,cx2,co.y2);
+    doc.line(cx2-1,co.y1,cx2+1,co.y1);
+    doc.line(cx2-1,co.y2,cx2+1,co.y2);
+    doc.setFont('helvetica','bold'); doc.setFontSize(5.5); doc.setTextColor(...co.col);
+    doc.text(co.lbl,cx2+3,(co.y1+co.y2)/2+1.5);
+  });
+  // Ht brace
+  doc.setDrawColor(150,50,200); doc.setLineWidth(0.4);
+  doc.line(cx2+14,pTop,cx2+14,pTop+ph);
+  doc.line(cx2+12,pTop,cx2+16,pTop); doc.line(cx2+12,pTop+ph,cx2+16,pTop+ph);
+  doc.setFont('helvetica','bold'); doc.setFontSize(5.5); doc.setTextColor(120,40,180);
+  doc.text('Ht',(cx2+14)+3,pTop+ph/2+1.5);
+
+  // tabla resultados geometría (a la derecha del diagrama)
+  const tx=px+pw+28, tw=usableW-(pw+30);
+  let ty=pTop+4;
+  const geomRows=[
+    ['H₁  Base bomba / nivel mínimo',`${h1} m`],
+    ['Hn  Altura útil (Módulo 2)',`${hn} m`],
+    ['H₂  Seguridad sobre nivel máx.',`${h2} m`],
+    ['h    Enterramiento / solera',`${hEnt} m`],
+  ];
+  geomRows.forEach((r,i)=>{
+    if(i%2===0){doc.setFillColor(...GRIS_LT);} else {doc.setFillColor(...BLANCO);}
+    doc.rect(tx,ty-3.5,tw,5.5,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_OC);
+    doc.text(r[0],tx+2,ty);
+    doc.setFont('helvetica','bold'); doc.setTextColor(...AZUL);
+    doc.text(r[1],tx+tw-2,ty,{align:'right'});
+    ty+=6;
+  });
+  ty+=2;
+  doc.setFillColor(...AZUL); doc.rect(tx,ty-3.5,tw,7,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...BLANCO);
+  doc.text('PROFUNDIDAD TOTAL',tx+2,ty+1.5);
+  doc.setTextColor(...NARANJA);
+  doc.text(`${ht} m`,tx+tw-2,ty+1.5,{align:'right'});
+  cy=Math.max(pTop+ph,ty+10)+6;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_MD);
+  doc.text(`Ht = H₁ + Hn + H₂ + h = ${h1} + ${hn} + ${h2} + ${hEnt} = ${ht} m`,ML,cy); cy+=4;
+
+  // ══════════════════════════════════════
+  //  Añadir pies a todas las páginas
+  // ══════════════════════════════════════
+  const totalP=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalP;p++){
+    doc.setPage(p); drawFooter(p,totalP);
+  }
+
+  doc.save('Informe_Pozo_Fecales_ELECNOR.pdf');
 }
 
 renderTabla();
