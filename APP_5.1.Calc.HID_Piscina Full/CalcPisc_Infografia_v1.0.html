@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Infografía técnica MEP - Sistema hidráulico completo de piscina pública">
+<meta name="version" content="1.0.0">
+<meta name="normas-ref" content="RD 742/2013 · UNE-EN 13451 · RITE RD 1027/2007 mod. RD 178/2021 · CTE DB HE-4 · RD 3/2023">
+<meta name="revision" content="2026-05-11">
+<title>PISCINA PÚBLICA · Sistema Hidráulico Completo | Dashboard MEP v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg-deep:     #060d1a;
+    --bg-panel:    #0c1829;
+    --bg-card:     #111f35;
+    --bg-card2:    #0e1b2e;
+    --border:      #1a2e4a;
+    --border-hi:   #1e3a5f;
+
+    --neon-blue:   #00d4ff;
+    --neon-cyan:   #00ffcc;
+    --neon-amber:  #ffb700;
+    --neon-red:    #ff3d5a;
+    --neon-green:  #39ff89;
+    --neon-purple: #c084fc;
+
+    --water-cold:  #00d4ff;
+    --water-warm:  #ff8c42;
+    --water-drain: #7c6b5a;
+    --chem-yellow: #f5d800;
+    --chem-green:  #00ff99;
+    --heat-red:    #ff4d6d;
+
+    --text-primary:   #e8f4fd;
+    --text-secondary: #8db3cc;
+    --text-muted:     #4a6a82;
+    --text-accent:    #00d4ff;
+
+    --font-mono:    'Share Tech Mono', monospace;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body:    'Barlow', sans-serif;
+
+    --glow-blue:   0 0 12px rgba(0,212,255,0.5), 0 0 40px rgba(0,212,255,0.15);
+    --glow-amber:  0 0 12px rgba(255,183,0,0.5), 0 0 40px rgba(255,183,0,0.15);
+    --glow-red:    0 0 12px rgba(255,61,90,0.5),  0 0 40px rgba(255,61,90,0.15);
+    --glow-green:  0 0 12px rgba(57,255,137,0.5), 0 0 40px rgba(57,255,137,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCAN LINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+    );
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #040b18 0%, #091220 60%, #040b18 100%);
+    border-bottom: 1px solid var(--border-hi);
+    padding: 18px 28px 14px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; }
+
+  .logo-mark {
+    width: 48px; height: 48px;
+    border: 2px solid var(--neon-blue);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--glow-blue);
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 28px; height: 28px; }
+
+  .header-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .header-title span { color: var(--neon-blue); }
+
+  .header-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    margin-top: 4px;
+  }
+
+  .header-meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  }
+
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .badge-blue  { background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.3); color: var(--neon-blue); }
+  .badge-amber { background: rgba(255,183,0,0.12);  border: 1px solid rgba(255,183,0,0.3);  color: var(--neon-amber); }
+  .badge-green { background: rgba(57,255,137,0.12); border: 1px solid rgba(57,255,137,0.3); color: var(--neon-green); }
+  .badge-red   { background: rgba(255,61,90,0.12);  border: 1px solid rgba(255,61,90,0.3);  color: var(--neon-red); }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    display: flex; gap: 0;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    padding: 0 16px;
+  }
+
+  .nav-tab {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .nav-tab:hover { color: var(--text-secondary); }
+
+  .nav-tab.active {
+    color: var(--neon-blue);
+    border-bottom-color: var(--neon-blue);
+    text-shadow: 0 0 8px rgba(0,212,255,0.4);
+  }
+
+  /* ── MAIN GRID ── */
+  .main-content { padding: 0; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── OVERVIEW LAYOUT ── */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    grid-template-rows: auto;
+    gap: 0;
+    height: calc(100vh - 110px);
+    overflow: hidden;
+  }
+
+  .side-panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .side-panel.right { border-right: none; border-left: 1px solid var(--border); }
+
+  .center-panel {
+    overflow-y: auto;
+    background: var(--bg-deep);
+    padding: 16px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover { border-color: var(--border-hi); }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--neon-blue);
+    border-radius: 2px;
+    box-shadow: var(--glow-blue);
+    flex-shrink: 0;
+  }
+
+  .card-title.amber::before { background: var(--neon-amber); box-shadow: var(--glow-amber); }
+  .card-title.red::before   { background: var(--neon-red);   box-shadow: var(--glow-red); }
+  .card-title.green::before { background: var(--neon-green); box-shadow: var(--glow-green); }
+
+  /* ── ELEMENT ITEMS ── */
+  .element-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+  }
+
+  .element-item:hover { background: rgba(0,212,255,0.05); border-color: rgba(0,212,255,0.15); }
+  .element-item.active { background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.3); }
+
+  .elem-icon {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .elem-icon.blue   { background: rgba(0,212,255,0.15); }
+  .elem-icon.amber  { background: rgba(255,183,0,0.15); }
+  .elem-icon.red    { background: rgba(255,61,90,0.15); }
+  .elem-icon.green  { background: rgba(57,255,137,0.15); }
+  .elem-icon.purple { background: rgba(192,132,252,0.15); }
+
+  .elem-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .elem-code {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-hi);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 200px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+
+  .detail-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    color: var(--neon-blue);
+    text-shadow: var(--glow-blue);
+    margin-bottom: 4px;
+  }
+
+  .detail-subtitle {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 14px;
+  }
+
+  .detail-body { font-size: 13px; line-height: 1.65; color: var(--text-secondary); }
+
+  .detail-body strong { color: var(--text-primary); }
+
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .spec-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+
+  .spec-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .spec-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--neon-blue);
+    font-weight: bold;
+  }
+
+  .spec-value.amber { color: var(--neon-amber); }
+  .spec-value.green { color: var(--neon-green); }
+  .spec-value.red   { color: var(--neon-red); }
+
+  /* ── FORMULA BOX ── */
+  .formula-box {
+    background: #060f1d;
+    border: 1px solid rgba(0,212,255,0.25);
+    border-left: 3px solid var(--neon-blue);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--neon-cyan);
+    line-height: 1.8;
+  }
+
+  .formula-box .formula-title {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .formula-eq { font-size: 15px; color: var(--neon-blue); margin: 4px 0; }
+
+  .formula-vars { font-size: 10px; color: var(--text-secondary); margin-top: 6px; }
+
+  /* ── NORM ITEMS ── */
+  .norm-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .norm-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .norm-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ── WARNING / ERROR BOXES ── */
+  .warn-box {
+    background: rgba(255,183,0,0.07);
+    border: 1px solid rgba(255,183,0,0.25);
+    border-left: 3px solid var(--neon-amber);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .warn-box .warn-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--neon-amber);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .error-box {
+    background: rgba(255,61,90,0.07);
+    border: 1px solid rgba(255,61,90,0.25);
+    border-left: 3px solid var(--neon-red);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .error-box .error-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--neon-red);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  /* ── FULL TAB PAGES ── */
+  .full-page { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+
+  .section-header {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .section-header span { color: var(--neon-blue); }
+
+  .section-lead {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    margin-bottom: 24px;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ── SCHEMATIC SVG AREA ── */
+  .schematic-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    overflow: auto;
+    position: relative;
+  }
+
+  .schematic-wrap svg { width: 100%; height: auto; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow: auto;
+  }
+
+  .mermaid { font-family: var(--font-mono) !important; }
+
+  /* ── CALC TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  th {
+    background: rgba(0,212,255,0.08);
+    color: var(--neon-blue);
+    padding: 8px 12px;
+    text-align: left;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(0,212,255,0.2);
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); color: var(--text-primary); }
+
+  /* ── STATUS DOTS ── */
+  .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .dot-blue   { background: var(--neon-blue); box-shadow: 0 0 6px var(--neon-blue); }
+  .dot-amber  { background: var(--neon-amber); box-shadow: 0 0 6px var(--neon-amber); }
+  .dot-red    { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
+  .dot-green  { background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); }
+
+  /* ── KPI BAR ── */
+  .kpi-bar {
+    display: flex; gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    flex: 1; min-width: 120px;
+    text-align: center;
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 28px;
+    color: var(--neon-blue);
+    text-shadow: var(--glow-blue);
+    line-height: 1;
+  }
+
+  .kpi-value.amber { color: var(--neon-amber); text-shadow: var(--glow-amber); }
+  .kpi-value.red   { color: var(--neon-red); text-shadow: var(--glow-red); }
+  .kpi-value.green { color: var(--neon-green); text-shadow: var(--glow-green); }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .kpi-unit {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ── PIPELINE SVG ── */
+  #pipeline-svg text { font-family: 'Share Tech Mono', monospace; }
+
+  /* ── ERRORS SECTION ── */
+  .error-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .error-entry {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--neon-red);
+    border-radius: 4px;
+    padding: 12px 14px;
+    display: flex; gap: 12px;
+  }
+
+  .error-num {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 24px;
+    color: var(--neon-red);
+    opacity: 0.4;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 28px;
+  }
+
+  .error-content h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--neon-red);
+    margin-bottom: 4px;
+  }
+
+  .error-content p { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+  .error-content .fix {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--neon-green);
+    margin-top: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+  /* ── NORMA LIST ── */
+  .norma-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .norma-block {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 14px;
+    display: flex; gap: 12px;
+  }
+
+  .norma-code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--neon-amber);
+    letter-spacing: 0.08em;
+    min-width: 110px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .norma-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .norma-art  { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-mono); }
+
+  /* ── CALC INPUT ── */
+  .calc-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 100px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .input-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+
+  .input-field {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 7px 12px;
+    color: var(--neon-blue);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-field:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.15);
+  }
+
+  .input-unit { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+
+  .btn-calc {
+    background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,212,255,0.05));
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--glow-blue);
+  }
+
+  .btn-calc:hover {
+    background: rgba(0,212,255,0.2);
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .result-cell {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 5px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .result-val {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--neon-blue);
+    font-weight: bold;
+  }
+
+  .result-lbl {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  select.input-field { appearance: none; cursor: pointer; }
+
+  @media(max-width:1100px) {
+    .overview-grid { grid-template-columns: 240px 1fr; height: auto; overflow: visible; }
+    .side-panel.right { display: none; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media(max-width:700px) {
+    .overview-grid { grid-template-columns: 1fr; }
+    .side-panel { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="11" stroke="#00d4ff" stroke-width="1.5"/>
+        <path d="M8 14 Q11 8 14 14 Q17 20 20 14" stroke="#00ffcc" stroke-width="1.5" fill="none"/>
+        <circle cx="14" cy="14" r="3" fill="#00d4ff" opacity="0.4"/>
+        <line x1="14" y1="3" x2="14" y2="7" stroke="#00d4ff" stroke-width="1"/>
+        <line x1="14" y1="21" x2="14" y2="25" stroke="#00d4ff" stroke-width="1"/>
+        <line x1="3" y1="14" x2="7" y2="14" stroke="#00d4ff" stroke-width="1"/>
+        <line x1="21" y1="14" x2="25" y2="14" stroke="#00d4ff" stroke-width="1"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">PISCINA PÚBLICA · <span>SISTEMA HIDRÁULICO</span></div>
+      <div class="header-sub">Filtración · Calentamiento · Dosificación · Drenajes · Control · MEP Engineering Dashboard</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span class="badge badge-blue">v1.0 · Rev. 2026-05</span>
+    <span class="badge badge-amber">RD 742/2013 · RITE · UNE-EN 13451</span>
+    <span class="badge badge-green"><span class="dot dot-green"></span>NORMATIVA VIGENTE 2026</span>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<nav class="nav-tabs" role="tablist">
+  <div class="nav-tab active" onclick="showTab('tab-overview')" role="tab">Esquema General</div>
+  <div class="nav-tab" onclick="showTab('tab-calc')" role="tab">Cálculo Hidráulico</div>
+  <div class="nav-tab" onclick="showTab('tab-elementos')" role="tab">Elementos del Sistema</div>
+  <div class="nav-tab" onclick="showTab('tab-normativa')" role="tab">Normativa</div>
+  <div class="nav-tab" onclick="showTab('tab-errores')" role="tab">Errores en Obra</div>
+  <div class="nav-tab" onclick="showTab('tab-calor')" role="tab">Calentamiento</div>
+</nav>
+
+<!-- ═══════════════════════════ TAB 1: OVERVIEW ═══════════════════════════ -->
+<div id="tab-overview" class="tab-panel active">
+<div class="overview-grid">
+
+  <!-- LEFT PANEL: ELEMENT LIST -->
+  <div class="side-panel">
+    <div class="card-title">Circuito de Filtración</div>
+
+    <div class="element-item active" onclick="showDetail('sumidero')">
+      <div class="elem-icon blue">⬇</div>
+      <div><div class="elem-name">Sumidero de Fondo</div><div class="elem-code">TAG: SUM-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('skimmer')">
+      <div class="elem-icon blue">〰</div>
+      <div><div class="elem-name">Skimmer Superficial</div><div class="elem-code">TAG: SKM-01...N</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('preclorador')">
+      <div class="elem-icon amber">⚗</div>
+      <div><div class="elem-name">Prefiltro / Canasta Bomba</div><div class="elem-code">TAG: PF-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('bomba-recirculacion')">
+      <div class="elem-icon blue">⊙</div>
+      <div><div class="elem-name">Bomba de Recirculación</div><div class="elem-code">TAG: BRE-01 / 02</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('filtro')">
+      <div class="elem-icon blue">▣</div>
+      <div><div class="elem-name">Filtro de Arena (Multiplex)</div><div class="elem-code">TAG: FLT-01...N</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('vaso-expansion')">
+      <div class="elem-icon purple">◎</div>
+      <div><div class="elem-name">Vaso de Expansión</div><div class="elem-code">TAG: VE-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('intercambiador')">
+      <div class="elem-icon red">≋</div>
+      <div><div class="elem-name">Intercambiador de Calor</div><div class="elem-code">TAG: ICT-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('lamparas-uv')">
+      <div class="elem-icon purple">☀</div>
+      <div><div class="elem-name">Lámparas UV (desinfección)</div><div class="elem-code">TAG: UV-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('dosificador')">
+      <div class="elem-icon amber">⊕</div>
+      <div><div class="elem-name">Dosificador automático</div><div class="elem-code">TAG: DOS-01...3</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('contador')">
+      <div class="elem-icon green">⌗</div>
+      <div><div class="elem-name">Contadores de Caudal</div><div class="elem-code">TAG: CM-01 / 02</div></div>
+    </div>
+
+    <div class="card-title amber" style="margin-top:8px">Retorno al Vaso</div>
+
+    <div class="element-item" onclick="showDetail('boca-impulsion')">
+      <div class="elem-icon blue">↑</div>
+      <div><div class="elem-name">Bocas de Impulsión (retorno)</div><div class="elem-code">TAG: BI-01...N</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('boca-aspiracion')">
+      <div class="elem-icon blue">↓</div>
+      <div><div class="elem-name">Tomas de Aspiración (fondo)</div><div class="elem-code">TAG: TA-01...N</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('llenado')">
+      <div class="elem-icon green">💧</div>
+      <div><div class="elem-name">Sistema de Llenado / Reposición</div><div class="elem-code">TAG: LL-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('desagues')">
+      <div class="elem-icon amber">⬇</div>
+      <div><div class="elem-name">Desagüe y vaciado del vaso</div><div class="elem-code">TAG: DRN-01</div></div>
+    </div>
+    <div class="element-item" onclick="showDetail('desbordamiento')">
+      <div class="elem-icon blue">〜</div>
+      <div><div class="elem-name">Canal de Desbordamiento</div><div class="elem-code">TAG: CD-01</div></div>
+    </div>
+  </div>
+
+  <!-- CENTER: DETAIL + SCHEMATIC -->
+  <div class="center-panel">
+    <!-- KPI BAR -->
+    <div class="kpi-bar">
+      <div class="kpi-card">
+        <div class="kpi-value" id="kpi-q">—</div>
+        <div class="kpi-unit">m³/h</div>
+        <div class="kpi-label">Caudal Recirculación</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value amber" id="kpi-trec">4</div>
+        <div class="kpi-unit">h</div>
+        <div class="kpi-label">T. Recirculación Pub.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value green" id="kpi-vfilt">30</div>
+        <div class="kpi-unit">m³/h·m²</div>
+        <div class="kpi-label">Vel. Filtración máx.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value red">2.5</div>
+        <div class="kpi-unit">m/s</div>
+        <div class="kpi-label">V<sub>máx</sub> aspiración</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">3.0</div>
+        <div class="kpi-unit">m/s</div>
+        <div class="kpi-label">V<sub>máx</sub> impulsión</div>
+      </div>
+    </div>
+
+    <!-- DETAIL BOX -->
+    <div class="detail-box" id="detail-box">
+      <div class="detail-title">Sistema Hidráulico · Piscina Pública</div>
+      <div class="detail-subtitle">SELECCIONE UN ELEMENTO DE LA LISTA IZQUIERDA PARA VER SU FICHA TÉCNICA</div>
+      <div class="detail-body">
+        <p>Esta infografía cubre el <strong>circuito hidráulico completo</strong> de una piscina pública: desde la aspiración del agua en el vaso hasta su retorno filtrada, desinfectada y climatizada, incluyendo:</p>
+        <ul style="margin:10px 0 0 20px; line-height:2">
+          <li>Sistema de filtración multiplex con arena</li>
+          <li>Vaso de compensación / expansión</li>
+          <li>Intercambiador de calor (bomba de calor aerotérmica)</li>
+          <li>Desinfección UV + dosificación automática pH/cloro</li>
+          <li>Bocas de impulsión y aspiración del vaso</li>
+          <li>Sistemas de llenado, drenaje y desbordamiento</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- MINI SCHEMA SVG -->
+    <div class="schematic-wrap">
+      <svg id="pipeline-svg" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" style="background:#060d1a; border-radius:6px;">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#00d4ff"/>
+          </marker>
+          <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#ff3d5a"/>
+          </marker>
+          <marker id="arr-amber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#ffb700"/>
+          </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- VASO -->
+        <rect x="10" y="80" width="120" height="140" rx="4" fill="#0a1a2e" stroke="#00d4ff" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="70" y="145" text-anchor="middle" fill="#00d4ff" font-size="11" font-weight="bold">VASO</text>
+        <text x="70" y="162" text-anchor="middle" fill="#4a6a82" font-size="9">PISCINA</text>
+        <!-- Water wavy line -->
+        <path d="M15 130 Q30 122 45 130 Q60 138 75 130 Q90 122 105 130 Q120 138 125 130" stroke="#00d4ff" stroke-width="1" fill="none" opacity="0.4"/>
+        <path d="M15 145 Q30 137 45 145 Q60 153 75 145 Q90 137 105 145 Q120 153 125 145" stroke="#00d4ff" stroke-width="1" fill="none" opacity="0.25"/>
+
+        <!-- Sumidero flecha abajo -->
+        <line x1="70" y1="220" x2="70" y2="248" stroke="#4a6a82" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <text x="70" y="260" text-anchor="middle" fill="#4a6a82" font-size="8">Sumidero</text>
+
+        <!-- Canal desbordamiento arriba -->
+        <rect x="10" y="70" width="120" height="10" rx="2" fill="#00d4ff" opacity="0.15"/>
+        <text x="70" y="68" text-anchor="middle" fill="#4a6a82" font-size="8">Canal desbordamiento</text>
+
+        <!-- PIPE Aspiración -->
+        <line x1="130" y1="190" x2="185" y2="190" stroke="#00d4ff" stroke-width="3" marker-end="url(#arr)"/>
+        <text x="157" y="183" text-anchor="middle" fill="#4a6a82" font-size="8">Asp.</text>
+
+        <!-- BOMBA -->
+        <circle cx="210" cy="190" r="22" fill="#0a1a2e" stroke="#00d4ff" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="210" y="187" text-anchor="middle" fill="#00d4ff" font-size="9" font-weight="bold">BRE</text>
+        <text x="210" y="199" text-anchor="middle" fill="#4a6a82" font-size="7">bomba</text>
+
+        <!-- PIPE bomba → prefiltro -->
+        <line x1="232" y1="190" x2="272" y2="190" stroke="#00d4ff" stroke-width="3" marker-end="url(#arr)"/>
+
+        <!-- PREFILTRO -->
+        <rect x="272" y="174" width="44" height="32" rx="4" fill="#0a1a2e" stroke="#4a6a82" stroke-width="1"/>
+        <text x="294" y="193" text-anchor="middle" fill="#4a6a82" font-size="8">PF-01</text>
+
+        <!-- PIPE → FILTRO -->
+        <line x1="316" y1="190" x2="356" y2="190" stroke="#00d4ff" stroke-width="3" marker-end="url(#arr)"/>
+
+        <!-- FILTRO ARENA -->
+        <ellipse cx="385" cy="190" rx="28" ry="38" fill="#0a1a2e" stroke="#00d4ff" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="385" y="187" text-anchor="middle" fill="#00d4ff" font-size="9" font-weight="bold">FLT</text>
+        <text x="385" y="199" text-anchor="middle" fill="#4a6a82" font-size="7">Arena</text>
+
+        <!-- CONTRALAVADO -->
+        <line x1="385" y1="228" x2="385" y2="260" stroke="#ffb700" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-amber)"/>
+        <text x="385" y="270" text-anchor="middle" fill="#ffb700" font-size="8">Contralavado</text>
+
+        <!-- PIPE → UV -->
+        <line x1="413" y1="190" x2="453" y2="190" stroke="#00d4ff" stroke-width="3" marker-end="url(#arr)"/>
+        <text x="433" y="183" text-anchor="middle" fill="#4a6a82" font-size="7">CM-01</text>
+
+        <!-- UV -->
+        <rect x="453" y="174" width="44" height="32" rx="4" fill="#1a0a2e" stroke="#c084fc" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="475" y="193" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="bold">UV</text>
+
+        <!-- INTERCAMBIADOR -->
+        <rect x="510" y="155" width="60" height="70" rx="5" fill="#1a0a0a" stroke="#ff3d5a" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="540" y="185" text-anchor="middle" fill="#ff3d5a" font-size="9" font-weight="bold">ICT</text>
+        <text x="540" y="197" text-anchor="middle" fill="#4a6a82" font-size="7">Interc.</text>
+        <text x="540" y="210" text-anchor="middle" fill="#4a6a82" font-size="7">Calor</text>
+        <!-- Bomba calor -->
+        <line x1="540" y1="155" x2="540" y2="125" stroke="#ff3d5a" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="515" y="100" width="50" height="25" rx="3" fill="#0a0808" stroke="#ff4d6d" stroke-width="1"/>
+        <text x="540" y="116" text-anchor="middle" fill="#ff4d6d" font-size="8">BdC Aerot.</text>
+
+        <!-- PIPE → DOSIFICADOR -->
+        <line x1="497" y1="190" x2="510" y2="190" stroke="#00d4ff" stroke-width="3"/>
+
+        <!-- DOS -->
+        <rect x="575" y="174" width="50" height="32" rx="4" fill="#1a1a0a" stroke="#f5d800" stroke-width="1.5"/>
+        <text x="600" y="191" text-anchor="middle" fill="#f5d800" font-size="8" font-weight="bold">DOS</text>
+        <text x="600" y="201" text-anchor="middle" fill="#4a6a82" font-size="7">pH/Cl₂</text>
+        <line x1="570" y1="190" x2="575" y2="190" stroke="#00d4ff" stroke-width="3"/>
+
+        <!-- PIPE → CM02 → RETORNO -->
+        <line x1="625" y1="190" x2="665" y2="190" stroke="#00d4ff" stroke-width="3" marker-end="url(#arr)"/>
+        <text x="645" y="183" text-anchor="middle" fill="#4a6a82" font-size="7">CM-02</text>
+
+        <!-- VASO EXPANSIÓN / COMPENSACIÓN -->
+        <rect x="665" y="155" width="55" height="70" rx="5" fill="#0a0a1a" stroke="#c084fc" stroke-width="1.5"/>
+        <text x="692" y="188" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="bold">VE/VC</text>
+        <text x="692" y="200" text-anchor="middle" fill="#4a6a82" font-size="7">Vaso exp.</text>
+        <text x="692" y="210" text-anchor="middle" fill="#4a6a82" font-size="7">Compen.</text>
+
+        <!-- PIPE → RETORNO VASO -->
+        <line x1="720" y1="190" x2="760" y2="190" stroke="#00ffcc" stroke-width="3" marker-end="url(#arr)"/>
+
+        <!-- BOCAS IMPULSIÓN -->
+        <rect x="760" y="80" width="30" height="140" rx="4" fill="#0a1a2e" stroke="#00ffcc" stroke-width="1.5"/>
+        <text x="775" y="148" text-anchor="middle" fill="#00ffcc" font-size="8" writing-mode="vertical-lr">BI-01..N</text>
+
+        <!-- PIPE retorno al vaso -->
+        <line x1="760" y1="150" x2="130" y2="150" stroke="#00ffcc" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.4"/>
+
+        <!-- LLENADO RED -->
+        <line x1="130" y1="100" x2="190" y2="100" stroke="#39ff89" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+        <text x="160" y="93" text-anchor="middle" fill="#39ff89" font-size="8">Llenado</text>
+        <rect x="190" y="88" width="40" height="24" rx="3" fill="#0a1a0a" stroke="#39ff89" stroke-width="1"/>
+        <text x="210" y="103" text-anchor="middle" fill="#39ff89" font-size="8">VAN</text>
+
+        <!-- LEYENDA -->
+        <rect x="10" y="10" width="8" height="8" fill="#00d4ff" rx="1"/>
+        <text x="22" y="18" fill="#4a6a82" font-size="8">Agua filtrada</text>
+        <rect x="90" y="10" width="8" height="8" fill="#00ffcc" rx="1"/>
+        <text x="102" y="18" fill="#4a6a82" font-size="8">Retorno vaso</text>
+        <rect x="165" y="10" width="8" height="8" fill="#ff3d5a" rx="1"/>
+        <text x="177" y="18" fill="#4a6a82" font-size="8">Circuito calor</text>
+        <rect x="240" y="10" width="8" height="8" fill="#f5d800" rx="1"/>
+        <text x="252" y="18" fill="#4a6a82" font-size="8">Dosificación</text>
+        <rect x="310" y="10" width="8" height="8" fill="#c084fc" rx="1"/>
+        <text x="322" y="18" fill="#4a6a82" font-size="8">UV / Expansión</text>
+        <rect x="405" y="10" width="8" height="8" fill="#ffb700" rx="1"/>
+        <text x="417" y="18" fill="#4a6a82" font-size="8">Contralavado</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: NORMATIVA RÁPIDA -->
+  <div class="side-panel right">
+    <div class="card-title amber">Control de Parámetros</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Parámetro</th><th>Rango</th></tr></thead>
+        <tbody>
+          <tr><td>Cloro libre</td><td style="color:#00ffcc">0.5–2 mg/L</td></tr>
+          <tr><td>Cloro comb.</td><td style="color:#f5d800">≤0.6 mg/L</td></tr>
+          <tr><td>pH</td><td style="color:#00d4ff">7.2–7.8</td></tr>
+          <tr><td>Turbidez</td><td style="color:#00ffcc">≤0.5 NTU</td></tr>
+          <tr><td>T agua (cubierta)</td><td style="color:#ff8c42">24–30°C</td></tr>
+          <tr><td>T agua (libre)</td><td style="color:#ff8c42">≥22°C</td></tr>
+          <tr><td>Potencial redox</td><td style="color:#00d4ff">≥720 mV</td></tr>
+          <tr><td>Renovación mín.</td><td style="color:#39ff89">≥5% V/día</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title red" style="margin-top:8px">Velocidades Límite</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Tubería</th><th>V<sub>máx</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Aspiración</td><td style="color:#ff3d5a">2.5 m/s</td></tr>
+          <tr><td>Impulsión</td><td style="color:#ff8c42">3.0 m/s</td></tr>
+          <tr><td>Distribución vaso</td><td style="color:#ffb700">1.5 m/s</td></tr>
+          <tr><td>Contralavado filtro</td><td style="color:#00d4ff">25–40 m/h</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title" style="margin-top:8px">Frecuencia Controles</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Control</th><th>Frec.</th></tr></thead>
+        <tbody>
+          <tr><td>pH + cloro</td><td style="color:#00ffcc">Cada 2h</td></tr>
+          <tr><td>Turbidez</td><td style="color:#00d4ff">Diario</td></tr>
+          <tr><td>Temperatura</td><td style="color:#ff8c42">Diario</td></tr>
+          <tr><td>Análisis lab.</td><td style="color:#f5d800">Semanal</td></tr>
+          <tr><td>Contralavado</td><td style="color:#4a6a82">Según ΔP ≥30kPa</td></tr>
+          <tr><td>Vaciado vaso</td><td style="color:#c084fc">Anual (no oblig.)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title green" style="margin-top:8px">Normas de Referencia</div>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <span class="badge badge-amber" style="font-size:9px">RD 742/2013 · Arts. 6, 7, 10, 26, 28</span>
+      <span class="badge badge-blue" style="font-size:9px">UNE-EN 13451 · Equipos piscina</span>
+      <span class="badge badge-green" style="font-size:9px">RITE IT 1.2.4.6 · Calentamiento</span>
+      <span class="badge badge-red" style="font-size:9px">CTE DB HE-4 · Energía renovable</span>
+      <span class="badge badge-amber" style="font-size:9px">RD 3/2023 · Modif. RD 742/2013</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════ TAB 2: CÁLCULO ═══════════════════════════ -->
+<div id="tab-calc" class="tab-panel">
+<div class="full-page">
+  <div class="section-header">Cálculo <span>Hidráulico</span></div>
+  <div class="section-lead">DIMENSIONADO DEL SISTEMA DE FILTRACIÓN · FÓRMULAS MAESTRAS · RD 742/2013 + UNE-EN 13451</div>
+
+  <div class="two-col">
+    <!-- CALC PANEL -->
+    <div class="calc-panel">
+      <div class="card-title">Dimensionado del Sistema</div>
+      <div style="margin-bottom:16px; font-size:12px; color:var(--text-muted)">Introduce los datos del vaso para dimensionar el sistema completo de filtración.</div>
+
+      <div class="input-row">
+        <label class="input-label">Longitud vaso (L)</label>
+        <input class="input-field" type="number" id="inp-L" value="25" min="1">
+        <span class="input-unit">m</span>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Anchura vaso (B)</label>
+        <input class="input-field" type="number" id="inp-B" value="12.5" min="1">
+        <span class="input-unit">m</span>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Prof. media (h<sub>m</sub>)</label>
+        <input class="input-field" type="number" id="inp-H" value="1.6" min="0.5">
+        <span class="input-unit">m</span>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Tipo piscina</label>
+        <select class="input-field" id="inp-tipo">
+          <option value="4">Pública Tipo 1 (T<sub>rec</sub>=4h)</option>
+          <option value="6">Privada / Comunitaria (T<sub>rec</sub>=6h)</option>
+          <option value="3">Hidromasaje (T<sub>rec</sub>=3h)</option>
+        </select>
+        <span class="input-unit">h</span>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Vel. filtración (V<sub>f</sub>)</label>
+        <input class="input-field" type="number" id="inp-Vf" value="30" min="10" max="50">
+        <span class="input-unit">m³/h·m²</span>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Nº filtros</label>
+        <input class="input-field" type="number" id="inp-Nf" value="2" min="1">
+        <span class="input-unit">ud</span>
+      </div>
+
+      <button class="btn-calc" onclick="calcHidraulico()">▶ CALCULAR SISTEMA</button>
+
+      <div class="result-grid" id="result-grid" style="display:none">
+        <div class="result-cell"><div class="result-val" id="r-V">—</div><div class="result-lbl">Vol. Vaso (m³)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Q">—</div><div class="result-lbl">Q recirculación (m³/h)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-SF">—</div><div class="result-lbl">S filtración total (m²)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Df">—</div><div class="result-lbl">Ø filtro c/u (mm)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Da">—</div><div class="result-lbl">Ø tubería aspiración (mm)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Di">—</div><div class="result-lbl">Ø tubería impulsión (mm)</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Nsm">—</div><div class="result-lbl">Nº skimmers mín.</div></div>
+        <div class="result-cell"><div class="result-val" id="r-Nbi">—</div><div class="result-lbl">Nº bocas impulsión</div></div>
+      </div>
+    </div>
+
+    <!-- FÓRMULAS -->
+    <div>
+      <div class="formula-box">
+        <div class="formula-title">① CAUDAL DE RECIRCULACIÓN</div>
+        <div class="formula-eq">Q = V<sub>vaso</sub> / T<sub>rec</sub></div>
+        <div class="formula-vars">
+          Q [m³/h] · V<sub>vaso</sub> = L × B × h<sub>m</sub> [m³] · T<sub>rec</sub> = 4h (pública) / 6h (privada)
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <div class="formula-title">② SUPERFICIE DE FILTRACIÓN</div>
+        <div class="formula-eq">S<sub>f</sub> = Q / V<sub>f</sub></div>
+        <div class="formula-vars">
+          S<sub>f</sub> [m²] · Q [m³/h] · V<sub>f</sub> ≤30 m³/h·m² (pública) / ≤50 m³/h·m² (privada)
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <div class="formula-title">③ DIÁMETRO FILTRO (CIRCULAR)</div>
+        <div class="formula-eq">Ø<sub>f</sub> = 2 × √(S<sub>f,ud</sub> / π)</div>
+        <div class="formula-vars">
+          S<sub>f,ud</sub> = S<sub>f</sub> / N<sub>filtros</sub> · Resultado en metros → convertir a mm
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <div class="formula-title">④ DIÁMETRO TUBERÍAS</div>
+        <div class="formula-eq">Ø = √(4 × Q / (π × V<sub>máx</sub> × 3600))</div>
+        <div class="formula-vars">
+          Aspiración: V<sub>máx</sub>=2.5 m/s (Art.26 RD 742/2013) · Impulsión: V<sub>máx</sub>=3.0 m/s
+          <br>Q [m³/h] → m³/s ÷3600 · Resultado Ø en metros → × 1000 para mm
+        </div>
+      </div>
+
+      <div class="formula-box" style="border-left-color:var(--neon-amber)">
+        <div class="formula-title">⑤ NÚMERO DE SKIMMERS (según lámina libre)</div>
+        <div class="formula-eq">N<sub>sk</sub> = P<sub>lámina</sub> / 6 m (mín. 1 sk/6 m de perímetro)</div>
+        <div class="formula-vars">
+          P<sub>lámina</sub> = 2×(L+B) · Alternativa: 1 skimmer por cada 25 m² de lámina
+        </div>
+      </div>
+
+      <div class="formula-box" style="border-left-color:var(--neon-green)">
+        <div class="formula-title">⑥ BOCAS DE IMPULSIÓN</div>
+        <div class="formula-eq">N<sub>BI</sub> ≥ S<sub>lámina</sub> / 25 m² (1 boca c/ 25 m²)</div>
+        <div class="formula-vars">
+          Q<sub>boca</sub> = Q<sub>total</sub> / N<sub>BI</sub> · V<sub>boca</sub> ≤ 0.5 m/s (UNE-EN 13451-3)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURVA BOMBA chart.js -->
+  <div style="margin-top:20px">
+    <div class="card-title">Curva Característica Bomba de Recirculación (referencia orientativa)</div>
+    <div class="card" style="padding:16px; height:250px;">
+      <canvas id="chartBomba"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ TAB 3: ELEMENTOS ═══════════════════════════ -->
+<div id="tab-elementos" class="tab-panel">
+<div class="full-page">
+  <div class="section-header">Elementos del <span>Sistema</span></div>
+  <div class="section-lead">FICHAS TÉCNICAS DE CADA COMPONENTE · ESPECIFICACIONES · NORMATIVA APLICABLE</div>
+
+  <div class="three-col" style="gap:12px;">
+
+    <!-- BOMBA -->
+    <div class="card">
+      <div class="card-title">Bomba de Recirculación</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Configuración:</strong> Principal + Reserva (N+1). Ambas del mismo modelo. Arranque alternado automático.<br><br>
+        <strong>Prefiltro de canasta:</strong> obligatorio antes de la boca aspiración de la bomba. Retención de sólidos &gt;3mm.<br><br>
+        <strong>Material impulsor:</strong> PP/PVDF para resistencia al cloro. Eje en acero inox.<br><br>
+        <strong>Protección eléctrica:</strong> IP55 mín. para salas técnicas húmedas.
+      </div>
+      <div class="spec-grid" style="grid-template-columns:1fr 1fr; gap:6px; margin-top:10px">
+        <div class="spec-item"><div class="spec-label">Config.</div><div class="spec-value" style="font-size:12px">N+1 paralelo</div></div>
+        <div class="spec-item"><div class="spec-label">IP elect.</div><div class="spec-value amber" style="font-size:12px">IP 55</div></div>
+      </div>
+    </div>
+
+    <!-- FILTRO -->
+    <div class="card">
+      <div class="card-title">Filtro de Arena Multiplex</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Arena de cuarzo:</strong> granulometría 0.5–1.0 mm. Capa: 70–90 cm.<br><br>
+        <strong>Válvula 6 vías:</strong> Filtrado / Retrolavado / Enjuague / Recirculación / Vaciado / Cerrado.<br><br>
+        <strong>Contralavado:</strong> a velocidad 25–40 m/h, cuando ΔP &gt; 30 kPa. Duración: 5–8 min.<br><br>
+        <strong>Enjuague post-lavado:</strong> 1–3 min antes de retornar al vaso.
+      </div>
+      <div class="warn-box" style="margin-top:10px">
+        <div class="warn-title">⚠ Control ΔP</div>
+        Instalar manómetros entrada/salida. Contralavado obligatorio si diferencial supera 30–50 kPa según fabricante.
+      </div>
+    </div>
+
+    <!-- VASO EXPANSIÓN -->
+    <div class="card">
+      <div class="card-title amber">Vaso de Compensación / Expansión</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Función dual:</strong> Compensa volumen de agua desplazado por bañistas + absorbe dilataciones térmicas del circuito cerrado de calentamiento.<br><br>
+        <strong>Ubicación:</strong> conectado a la línea de retorno (impulsión al vaso), antes de las bocas de impulsión.<br><br>
+        <strong>Vol. compensación:</strong> aprox. 50 L/bañista (cuerpo humano desplaza agua al vaso).<br><br>
+        <strong>Llenado automático:</strong> con válvula de flotador y antirretorno obligatorio.
+      </div>
+    </div>
+
+    <!-- DOSIFICADOR -->
+    <div class="card">
+      <div class="card-title amber">Dosificación Automática</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Obligatorio en nuevas piscinas</strong> (Art. 7 RD 742/2013): sistemas automáticos o semiautomáticos.<br><br>
+        <strong>Equipo tipo:</strong> analizador en línea de pH + cloro libre (ORP) + bomba dosificadora peristáltica.<br><br>
+        <strong>Productos:</strong> hipoclorito sódico 150 g/L (Cl₂) + ácido clorhídrico (corrección pH) + floculante.<br><br>
+        <strong>Inyección:</strong> aguas abajo del filtro y aguas arriba de las bocas de impulsión.
+      </div>
+    </div>
+
+    <!-- UV -->
+    <div class="card">
+      <div class="card-title" style="color:var(--neon-purple)">Desinfección UV</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Dosis mínima:</strong> 400 J/m² (norma UNE-EN 13451). Reduce cloraminas hasta 80%.<br><br>
+        <strong>Posición:</strong> aguas arriba del punto de dosificación de cloro (el cloro actúa como desinfectante residual).<br><br>
+        <strong>Lámpara:</strong> baja presión (LP) para instalaciones hasta 200 m³/h. Media presión (MP) en grandes instalaciones.<br><br>
+        <strong>Mantenimiento:</strong> cambio de lámpara cada 9.000–12.000 h o cuando transmitancia &lt;70%.
+      </div>
+    </div>
+
+    <!-- INTERCAMBIADOR -->
+    <div class="card">
+      <div class="card-title red">Intercambiador de Calor</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Tipo:</strong> Placas (AISI 316L) o carcasa-tubos en Titanio (obligatorio si agua clorada en contacto).<br><br>
+        <strong>Circuito primario:</strong> agua del generador (bomba de calor/caldera).<br><br>
+        <strong>Circuito secundario:</strong> agua del vaso de la piscina.<br><br>
+        <strong>Posición:</strong> aguas abajo del filtro, antes del dosificador. Después del filtro: el agua ya está limpia para el ICT.<br><br>
+        <strong>T impulsión:</strong> 26–30°C (cubiertas) según RITE IT 1.1.4.3.2.
+      </div>
+    </div>
+
+    <!-- BOCAS IMPULSIÓN -->
+    <div class="card">
+      <div class="card-title green">Bocas de Impulsión</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Distribución:</strong> perimetral + fondo. Ángulo de 45° respecto a la horizontal para inducir circulación helicoidal.<br><br>
+        <strong>Velocidad salida:</strong> ≤0.5 m/s en zona próxima a bañistas (norma anti-succión).<br><br>
+        <strong>Material:</strong> ABS/PP resistente al cloro. Con tapa de seguridad anti-enganche.<br><br>
+        <strong>1 boca/25 m²</strong> de superficie de lámina de agua.
+      </div>
+    </div>
+
+    <!-- SUMIDERO -->
+    <div class="card">
+      <div class="card-title">Sumidero de Fondo</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Mínimo 2 sumideros</strong> por vaso (norma anti-succión UNE-EN 13451-3). Nunca uno solo.<br><br>
+        <strong>Caudal máx./sumidero:</strong> calculado para que velocidad &lt; 0.5 m/s en el plano de la rejilla.<br><br>
+        <strong>Separación mínima:</strong> 2 m entre sumideros (para que no puedan ser bloqueados simultáneamente por un bañista).<br><br>
+        <strong>Rejilla de seguridad:</strong> inamovible sin herramienta, paso de luz &lt;8 mm.
+      </div>
+    </div>
+
+    <!-- LLENADO Y DESAGÜE -->
+    <div class="card">
+      <div class="card-title green">Llenado, Reposición y Drenaje</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6">
+        <strong style="color:var(--text-primary)">Válvula de llenado:</strong> con antirretorno obligatorio (RD 742/2013 Art. 23). Solenoide + flotador.<br><br>
+        <strong>Renovación:</strong> ≥5% del volumen del vaso/día (corriente mayoritaria de CCAA).<br><br>
+        <strong>Desagüe fondo:</strong> con válvula de compuerta DN100–DN150 mín. Vaciado en tiempo razonable (≤12h para vasos &lt;500 m³).<br><br>
+        <strong>Rejilla de fondo / sumidero doble</strong> también actúa como toma de vaciado.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CANAL DESBORDAMIENTO -->
+  <div style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Canal de Desbordamiento (Overflow / Skimmer)</div>
+      <div class="two-col" style="gap:16px; margin-top:10px">
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.7">
+          <strong style="color:var(--text-primary)">Sistemas de recogida superficial:</strong><br>
+          — <strong>Skimmer:</strong> dispositivo de boca rectangular integrado en el perímetro. Recoge capa superficial (0–5 cm). Lleva cesta de retención. Válvula de igualación a fondo.<br>
+          — <strong>Canal perimetral overflow:</strong> canaleta perimetral continua. Mayor eficiencia en piscinas con alta ocupación. Recoge desbordamientos y el agua superficial de forma continua. El agua va al vaso de compensación por gravedad.
+        </div>
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.7">
+          <strong style="color:var(--text-primary)">Vaso de compensación (overflow):</strong><br>
+          Recoge el agua del canal perimetral + agua de contralavado recuperada + agua de lluvia. El agua se trata en el circuito de filtración antes de retornar al vaso principal. Capacidad mínima = 10 L × N<sub>bañistas</sub> máx. + 50% del volumen de retrolavado de filtros.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ TAB 4: NORMATIVA ═══════════════════════════ -->
+<div id="tab-normativa" class="tab-panel">
+<div class="full-page">
+  <div class="section-header"><span>Normativa</span> Aplicable</div>
+  <div class="section-lead">MARCO LEGAL VIGENTE 2026 · ARTÍCULOS ESPECÍFICOS · JERARQUÍA NORMATIVA</div>
+
+  <div class="norma-list">
+    <div class="norma-block">
+      <div class="norma-code">RD 742/2013<br>+ RD 3/2023</div>
+      <div>
+        <div class="norma-desc"><strong>Criterios técnico-sanitarios de piscinas.</strong> Norma estatal de referencia. Modificada por RD 3/2023 (Arts. 8, 15 y DA 3ª).</div>
+        <div class="norma-art">Art. 6 — Tratamiento del agua: filtración+desinfección obligatoria antes de retorno al vaso. No tratar directamente en el vaso.<br>
+          Art. 7 — Dosificación automática o semiautomática en nuevas piscinas.<br>
+          Art. 10 — Parámetros de calidad: pH 7.2–7.8, cloro libre 0.5–2 mg/L, turbidez ≤0.5 NTU, potencial redox ≥720 mV.<br>
+          Art. 23 — Antirretorno obligatorio en tomas de llenado.<br>
+          Art. 26 — Velocidades límite: aspiración ≤2.5 m/s, impulsión ≤3 m/s. Sistema hidráulico equilibrado.<br>
+          Art. 28 — Dos contadores de caudal obligatorios: 1 a entrada agua alimentación + 1 post-filtración/pre-desinfección.</div>
+      </div>
+    </div>
+
+    <div class="norma-block">
+      <div class="norma-code">UNE-EN 13451</div>
+      <div>
+        <div class="norma-desc"><strong>Equipos para piscinas.</strong> Serie de normas europeas que cubren cada elemento.</div>
+        <div class="norma-art">Parte 1 — Requisitos generales de seguridad y ensayos.<br>
+          Parte 3 — Sumideros: mínimo 2 por vaso, rejilla inamovible sin herramienta, caudal máx. para V &lt;0.5 m/s en rejilla.<br>
+          Parte 4 — Bocas de impulsión: anti-enganche, V salida ≤0.5 m/s en zona bañistas.<br>
+          Parte 7 — Lámparas UV: dosis mínima 400 J/m² confirmada.</div>
+      </div>
+    </div>
+
+    <div class="norma-block">
+      <div class="norma-code">RITE RD 1027/2007<br>mod. RD 178/2021</div>
+      <div>
+        <div class="norma-desc"><strong>Reglamento de Instalaciones Térmicas en Edificios.</strong> Regula el calentamiento del agua del vaso.</div>
+        <div class="norma-art">IT 1.1.4.3.2 — Temperatura del agua: 24–30°C en cubiertas. T<sub>aire</sub> = T<sub>agua</sub> + 1–2°C (mín. 26°C). HR ≤65%.<br>
+          IT 1.2.4.6.2 (ant.) — Piscinas cubiertas: parte de necesidades térmicas mediante energía renovable o residual.<br>
+          IT 1.2.4.6.3 — Piscinas al aire libre: SOLO energía renovable o residual para calentamiento (prohibida energía convencional).<br>
+          IT 1.2.4.6.4 — Espacios abiertos: solo renovables/residuales.</div>
+      </div>
+    </div>
+
+    <div class="norma-block">
+      <div class="norma-code">CTE DB HE-4<br>(actualiz. 2022)</div>
+      <div>
+        <div class="norma-desc"><strong>Ahorro de energía – Contribución energética mínima.</strong> Exige fracción solar / renovable mínima.</div>
+        <div class="norma-art">Para piscinas cubiertas calefactadas: contribución renovable según zona climática y demanda.<br>
+          La fracción mínima varía del 30% al 70% según zona HE. Complemento con bomba de calor aerotérmica (considerada renovable si COP &gt; 2.5).</div>
+      </div>
+    </div>
+
+    <div class="norma-block">
+      <div class="norma-code">RD 865/2003<br>+ UNE-EN ISO 11731</div>
+      <div>
+        <div class="norma-desc"><strong>Criterios higiénico-sanitarios Legionella.</strong> Aplica a circuitos de agua climatizada.</div>
+        <div class="norma-art">El intercambiador y el circuito térmico (circuito primario) pueden ser susceptibles de Legionella si T &lt;50°C.<br>
+          Programa de mantenimiento obligatorio. Análisis Legionella en circuito térmico: semestral mínimo.</div>
+      </div>
+    </div>
+
+    <div class="norma-block">
+      <div class="norma-code">Normativa<br>Autonómica</div>
+      <div>
+        <div class="norma-desc"><strong>Decretos de cada Comunidad Autónoma.</strong> Pueden ser más restrictivos que el RD 742/2013.</div>
+        <div class="norma-art">Ejemplo: Madrid — Decreto 99/2024: vaciado anual ya no obligatorio; declaración responsable sustituye a autorización sanitaria; tiempos de recirculación ajustados a especificaciones de fabricante.<br>
+          Principio general: aplica siempre la norma más restrictiva entre estatal y autonómica.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA RESUMEN PARAMÉTRICO -->
+  <div style="margin-top:20px">
+    <div class="card-title">Parámetros de Calidad del Agua · Anexo I RD 742/2013</div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Parámetro</th><th>Unidad</th><th>Valor mín.</th><th>Valor máx.</th><th>Frecuencia control</th><th>Método</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Cloro libre residual</td><td>mg/L</td><td>0.5</td><td>2.0</td><td>Cada 2h (operacional)</td><td>DPD/colorimetría</td></tr>
+          <tr><td>Cloro combinado</td><td>mg/L</td><td>—</td><td>0.6</td><td>Diario</td><td>DPD total - DPD libre</td></tr>
+          <tr><td>pH</td><td>—</td><td>7.2</td><td>7.8</td><td>Cada 2h</td><td>Electrometría</td></tr>
+          <tr><td>Turbidez</td><td>NTU</td><td>—</td><td>0.5</td><td>Diario</td><td>Nefelometría</td></tr>
+          <tr><td>Temperatura</td><td>°C</td><td>24</td><td>30</td><td>Diario</td><td>Termómetro calibrado</td></tr>
+          <tr><td>Potencial redox (ORP)</td><td>mV</td><td>720</td><td>—</td><td>Diario</td><td>Electrodo ORP</td></tr>
+          <tr><td>Coliformes totales</td><td>UFC/100mL</td><td>—</td><td>0</td><td>Semanal (lab.)</td><td>Filtración membrana</td></tr>
+          <tr><td>Pseudomonas aerug.</td><td>UFC/100mL</td><td>—</td><td>0</td><td>Semanal (lab.)</td><td>ISO 16266</td></tr>
+          <tr><td>Estafilococos coag+</td><td>UFC/100mL</td><td>—</td><td>0</td><td>Semanal</td><td>ISO 6888</td></tr>
+          <tr><td>Trihalometanos</td><td>µg/L</td><td>—</td><td>100</td><td>Mensual</td><td>GC-MS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ TAB 5: ERRORES ═══════════════════════════ -->
+<div id="tab-errores" class="tab-panel">
+<div class="full-page">
+  <div class="section-header">Errores <span>en Obra</span></div>
+  <div class="section-lead">COORDINACIÓN MEP · FALLOS FRECUENTES EN PROYECTO Y EJECUCIÓN · SOLUCIONES</div>
+
+  <div class="error-list">
+
+    <div class="error-entry">
+      <div class="error-num">01</div>
+      <div class="error-content">
+        <h4>Solo 1 sumidero de fondo (violación UNE-EN 13451-3)</h4>
+        <p>El error más peligroso. Un único sumidero puede atrapar a un bañista por succión. La norma obliga a mínimo 2 sumideros separados al menos 2 m, o sumidero doble con ambas compuertas en la misma carcasa. La instalación con un solo sumidero no puede pasar la inspección sanitaria.</p>
+        <div class="fix">✔ SOLUCIÓN: Planificar desde proyecto los 2 sumideros. Verificar planos con Salud Pública antes de ejecución.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">02</div>
+      <div class="error-content">
+        <h4>Dosificación química directamente en el vaso</h4>
+        <p>Art. 6.3 del RD 742/2013 lo prohíbe expresamente. El cloro o ácido añadido directamente al vaso crea zonas de alta concentración y puede provocar daños cutáneos, oculares o respiratorios en bañistas. Se observa frecuentemente en reformas de instalaciones antiguas que no adecúan el circuito.</p>
+        <div class="fix">✔ SOLUCIÓN: Los productos biocidas deben inyectarse SIEMPRE aguas arriba de las bocas de impulsión, en la línea de retorno.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">03</div>
+      <div class="error-content">
+        <h4>Ausencia de antirretorno en toma de llenado</h4>
+        <p>El Art. 23 del RD 742/2013 lo exige explícitamente. Sin antiretorno, en un evento de presión negativa en la red, el agua clorada de la piscina podría retornar a la red de distribución pública (agua potable), generando contaminación cruzada grave.</p>
+        <div class="fix">✔ SOLUCIÓN: Válvula antirretorno de muelle (doble cuerpo) o disconnector tipo BA en la acometida de llenado.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">04</div>
+      <div class="error-content">
+        <h4>Intercambiador de acero inoxidable (316L) en contacto con agua clorada</h4>
+        <p>El AISI 316L resiste cloro a bajas concentraciones, pero concentraciones puntuales durante la dosificación o pH incorrecto generan corrosión por picadura (pitting) en 6–24 meses. Fallo silencioso que contamina el circuito térmico.</p>
+        <div class="fix">✔ SOLUCIÓN: Intercambiador del lado secundario (agua piscina) siempre en Titanio Grado 1 o superior. Primario puede ser 316L.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">05</div>
+      <div class="error-content">
+        <h4>Velocidad de aspiración superior a 2.5 m/s</h4>
+        <p>Art. 26 RD 742/2013. Velocidades excesivas aumentan la pérdida de carga, generan ruido, cavitación en la bomba y reduce la vida útil. También aumenta el riesgo de succión peligrosa en sumideros. Error frecuente cuando se sustituye bomba por otra de mayor potencia sin recalcular las tuberías.</p>
+        <div class="fix">✔ SOLUCIÓN: Recalcular diámetro de tubería de aspiración con V = 1.5–2.0 m/s (seguridad). Nunca superar 2.5 m/s.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">06</div>
+      <div class="error-content">
+        <h4>Filtro de arena sin contralavado automático (o manual no efectuado)</h4>
+        <p>El filtro colmatado aumenta ΔP, reduce caudal de recirculación y en consecuencia el tiempo de recirculación real supera el teórico (4h). La calidad del agua se degrada progresivamente. Es el segundo error operativo más común detectado en inspecciones sanitarias.</p>
+        <div class="fix">✔ SOLUCIÓN: Presostato diferencial con alarma visual a 30 kPa. Programación de retrolavado automático mínimo 1 vez/semana aunque no se alcance el diferencial.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">07</div>
+      <div class="error-content">
+        <h4>Posición incorrecta de la dosificación de cloro (antes del filtro)</h4>
+        <p>El cloro dosificado antes del filtro de arena puede oxidar/degradar el medio filtrante y crear subproductos (cloraminas) por reacción con la materia orgánica retenida en el filtro. La secuencia correcta es: Bomba → Filtro → UV → Dosificación Cl/pH → Contador → Vaso.</p>
+        <div class="fix">✔ SOLUCIÓN: Verificar en proyecto el punto de inyección. El dosificador debe ir siempre AGUAS ABAJO del filtro y de la UV.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">08</div>
+      <div class="error-content">
+        <h4>Ausencia de los dos contadores de caudal reglamentarios</h4>
+        <p>Art. 28 RD 742/2013: obligatorio instalar contador a la entrada del agua de alimentación Y contador post-filtración/pre-desinfección. Es uno de los incumplimientos más detectados en inspecciones. Sin contadores, no se puede demostrar el tiempo de recirculación ni el volumen de renovación diario.</p>
+        <div class="fix">✔ SOLUCIÓN: Contador tipo Woltmann o electromagnético (electromagnético recomendado por ausencia de partes móviles) en ambas posiciones. Registro de lecturas en Libro de Control.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">09</div>
+      <div class="error-content">
+        <h4>Calentamiento de piscina al aire libre con caldera de gas convencional</h4>
+        <p>RITE IT 1.2.4.6.3 lo prohíbe taxativamente. Para piscinas al aire libre, solo se pueden usar fuentes de energía renovable o residual (solar térmica, bomba de calor aerotérmica, biomasa, energía residual de procesos). Este error se da frecuentemente en reformas de instalaciones antiguas.</p>
+        <div class="fix">✔ SOLUCIÓN: Reemplazar caldera por bomba de calor aerotérmica (COP &gt;3.5 en condiciones nominales) o solar térmica auxiliada por BC.</div>
+      </div>
+    </div>
+
+    <div class="error-entry">
+      <div class="error-num">10</div>
+      <div class="error-content">
+        <h4>Bocas de impulsión orientadas hacia la superficie (corriente laminar)</h4>
+        <p>Las bocas de impulsión dirigidas horizontalmente o hacia arriba crean zonas muertas en el fondo del vaso. La correcta circulación requiere impulsión a 45° inclinada hacia abajo o combinación fondo+pared para generar movimiento helicoidal tridimensional que garantice homogeneidad de temperatura y producto químico.</p>
+        <div class="fix">✔ SOLUCIÓN: Diseño hidráulico en proyecto con CFD simplificado. Bocas a 45° descendente + tomas de fondo para circulación completa del volumen.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ TAB 6: CALENTAMIENTO ═══════════════════════════ -->
+<div id="tab-calor" class="tab-panel">
+<div class="full-page">
+  <div class="section-header">Calentamiento del <span>Vaso</span></div>
+  <div class="section-lead">RITE IT 1.2.4.6 · CTE DB HE-4 · BOMBA DE CALOR AEROTÉRMICA · CÁLCULO TÉRMICO</div>
+
+  <div class="two-col">
+    <div>
+      <!-- TECNOLOGIAS -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title red">Tecnologías Admitidas (RITE 2021)</div>
+        <table>
+          <thead><tr><th>Sistema</th><th>Piscina Cubierta</th><th>Piscina Exterior</th><th>Notas</th></tr></thead>
+          <tbody>
+            <tr><td>Bomba de calor aerotérmica</td><td style="color:#39ff89">✔ Sí</td><td style="color:#39ff89">✔ Sí</td><td style="color:var(--text-muted)">Renovable (Dir. 2009/28/CE)</td></tr>
+            <tr><td>Solar térmica</td><td style="color:#39ff89">✔ Sí</td><td style="color:#39ff89">✔ Sí</td><td style="color:var(--text-muted)">Contribución mínima HE-4</td></tr>
+            <tr><td>Caldera gas natural</td><td style="color:#39ff89">✔ Sí (apoyo)</td><td style="color:#ff3d5a">✘ Prohibida</td><td style="color:var(--text-muted)">IT 1.2.4.6.3 RITE</td></tr>
+            <tr><td>Resistencia eléctrica (Joule)</td><td style="color:#ffb700">⚠ Limitada</td><td style="color:#ff3d5a">✘ Prohibida</td><td style="color:var(--text-muted)">Solo apoyo renovable &lt;33%</td></tr>
+            <tr><td>Geotermia / agua subterránea</td><td style="color:#39ff89">✔ Sí</td><td style="color:#39ff89">✔ Sí</td><td style="color:var(--text-muted)">Requiere autorización hidráulica</td></tr>
+            <tr><td>Biomasa</td><td style="color:#39ff89">✔ Sí</td><td style="color:#39ff89">✔ Sí</td><td style="color:var(--text-muted)">Requiere sala técnica específica</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- FÓRMULAS CALOR -->
+      <div class="formula-box" style="border-left-color:var(--heat-red)">
+        <div class="formula-title">POTENCIA PUESTA EN RÉGIMEN (calentamiento inicial)</div>
+        <div class="formula-eq">Q<sub>reg</sub> = V × ρ × c<sub>p</sub> × ΔT / (t × 3600)</div>
+        <div class="formula-vars">
+          Q<sub>reg</sub> [kW] · V [m³] · ρ=1000 kg/m³ · c<sub>p</sub>=4.186 kJ/kg·K<br>
+          ΔT = T<sub>objetivo</sub> - T<sub>inicial</sub> [K] · t = tiempo de puesta en régimen [h]
+        </div>
+      </div>
+
+      <div class="formula-box" style="border-left-color:var(--heat-red)">
+        <div class="formula-title">PÉRDIDAS TOTALES DEL VASO (mantenimiento)</div>
+        <div class="formula-eq">Q<sub>perd</sub> = Q<sub>evap</sub> + Q<sub>conv</sub> + Q<sub>rad</sub> + Q<sub>cond</sub></div>
+        <div class="formula-vars">
+          Q<sub>evap</sub> ≈ 0.7 × Q<sub>perd,total</sub> (mayor contribución en cubiertas con baja HR)<br>
+          Q<sub>conv</sub> ≈ h<sub>conv</sub> × S<sub>lámina</sub> × ΔT<sub>aire-agua</sub><br>
+          Q<sub>cond</sub> ≈ k × S<sub>paredes</sub> × ΔT / e (paredes y fondo)
+        </div>
+      </div>
+
+      <div class="formula-box" style="border-left-color:var(--heat-red)">
+        <div class="formula-title">POTENCIA BOMBA DE CALOR</div>
+        <div class="formula-eq">P<sub>BC</sub> = Q<sub>perd</sub> / COP · (factor de seguridad 1.2–1.3)</div>
+        <div class="formula-vars">
+          COP típico aerotérmica para piscina: 3.5–5.5 (a T<sub>amb</sub>=15°C, T<sub>agua</sub>=28°C)<br>
+          P<sub>BC,eléct.</sub> = P<sub>BC,térmica</sub> / COP [kW<sub>e</sub>]
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- CHART PÉRDIDAS -->
+      <div class="card" style="margin-bottom:14px; padding:16px;">
+        <div class="card-title red">Distribución típica de pérdidas térmicas (piscina cubierta)</div>
+        <div style="height:220px; position:relative;">
+          <canvas id="chartCalor"></canvas>
+        </div>
+      </div>
+
+      <!-- CONSIDERACIONES MEP -->
+      <div class="card">
+        <div class="card-title">Coordinación MEP · Sistema Térmico</div>
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.7">
+          <strong style="color:var(--text-primary); display:block; margin-bottom:6px">Coordinación con HVAC (piscinas cubiertas):</strong>
+          La deshumectadora de la sala de piscina y la bomba de calor del vaso son sistemas complementarios. El condensador de la deshumectadora puede precalentar el agua del vaso (recuperación de calor). Coordinar con instalador de climatización para integrar ambos ciclos frigoríficos.<br><br>
+
+          <strong style="color:var(--text-primary); display:block; margin-bottom:6px">Punto de conexión del intercambiador:</strong>
+          El ICT se instala DESPUÉS del filtro (agua limpia) y ANTES del dosificador. El circuito primario (agua caliente del generador) nunca entra en contacto con el agua del vaso. Vaso de expansión del circuito primario: dimensionar para volumen total del circuito térmico.<br><br>
+
+          <strong style="color:var(--text-primary); display:block; margin-bottom:6px">Control de temperatura:</strong>
+          Sonda PT100 o NTC en el retorno del vaso. Regulación por válvula de 3 vías mezcladora en el circuito primario. Temperatura de referencia medida a 20 cm de profundidad en centro de lámina (RITE IT 1.1.4.3.2).<br><br>
+
+          <strong style="color:var(--text-primary); display:block; margin-bottom:6px">Legionella en circuito primario:</strong>
+          Pasteurización térmica semanal a ≥60°C. Programa de mantenimiento según RD 865/2003.
+        </div>
+      </div>
+
+      <!-- T AGUA TABLA -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-title amber">Temperaturas de Diseño · RITE IT 1.1.4.3.2</div>
+        <table>
+          <thead><tr><th>Uso</th><th>T agua</th><th>T aire</th><th>HR máx.</th></tr></thead>
+          <tbody>
+            <tr><td>Natación / competición</td><td style="color:#00d4ff">25–27°C</td><td style="color:#ff8c42">26–29°C</td><td style="color:#39ff89">≤65%</td></tr>
+            <tr><td>Recreo / uso general</td><td style="color:#00d4ff">27–29°C</td><td style="color:#ff8c42">28–31°C</td><td style="color:#39ff89">≤65%</td></tr>
+            <tr><td>Terapéutica / rehabilit.</td><td style="color:#ff8c42">29–32°C</td><td style="color:#ff8c42">30–34°C</td><td style="color:#39ff89">≤65%</td></tr>
+            <tr><td>Niños (vaso chapoteador)</td><td style="color:#ff8c42">28–30°C</td><td style="color:#ff8c42">29–31°C</td><td style="color:#39ff89">≤65%</td></tr>
+            <tr><td>Hidromasaje / Jacuzzi</td><td style="color:#ff3d5a">36–40°C</td><td style="color:#ff8c42">26–30°C</td><td style="color:#39ff89">≤65%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script>
+// ── TAB NAVIGATION ──
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['tab-overview','tab-calc','tab-elementos','tab-normativa','tab-errores','tab-calor'].indexOf(id);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if (id === 'tab-calc') initChartBomba();
+  if (id === 'tab-calor') initChartCalor();
+}
+
+// ── DETAIL BOX ──
+const details = {
+  'sumidero': {
+    title: 'Sumidero de Fondo',
+    sub: 'TAG: SUM-01 · UNE-EN 13451-3',
+    color: '#00d4ff',
+    body: `<strong>Función:</strong> Aspiración del agua del vaso desde el fondo para alimentar al circuito de filtración. Junto con los skimmers recogen el 100% del agua a recircular.<br><br>
+    <strong>Mínimo 2 sumideros por vaso</strong> (UNE-EN 13451-3), separados mínimo 2 m, para evitar bloqueo simultáneo por un bañista. Rejilla inamovible sin herramienta, paso de luz &lt;8 mm.<br><br>
+    <strong>Caudal de diseño:</strong> máx. 0.5 m/s de velocidad en el plano de la rejilla. Superficie libre de rejilla = Q/(0.5 m/s × 3600) en m².`,
+    specs: [
+      {l:'V<sub>máx</sub> rejilla', v:'0.5 m/s', c:''},
+      {l:'Nº mínimo / vaso', v:'2 ud.', c:'red'},
+      {l:'Separación mín.', v:'2 m', c:'amber'},
+      {l:'Paso de luz rejilla', v:'< 8 mm', c:'green'}
+    ]
+  },
+  'skimmer': {
+    title: 'Skimmer Superficial',
+    sub: 'TAG: SKM-01...N · 1 ud. / 25 m² lámina',
+    color: '#00d4ff',
+    body: `<strong>Función:</strong> Recoge la capa superficial del agua (0–5 cm) donde se acumulan aceites, suciedad, insectos y materia orgánica ligera. Reduce drásticamente la carga orgánica en el circuito de filtración.<br><br>
+    <strong>Componentes:</strong> boca/cuello ajustable en altura, cesta de retención de sólidos gruesos (limpieza diaria obligatoria), válvula de igualación (equilibra presión cuando el nivel baja) y conexión a tubería de aspiración.<br><br>
+    <strong>1 skimmer por cada 25 m²</strong> de superficie de lámina (norma más extendida). Alternativa: 1 cada 6 m de perímetro. En piscinas de alta frecuentación, incrementar ratio.`,
+    specs: [
+      {l:'Ratio', v:'1/25 m²', c:''},
+      {l:'Alt. regulable', v:'±50 mm', c:'amber'},
+      {l:'Cesta retención', v:'Sólidos >5mm', c:'green'},
+      {l:'Aspira capa', v:'0–5 cm sup.', c:''}
+    ]
+  },
+  'bomba-recirculacion': {
+    title: 'Bomba de Recirculación',
+    sub: 'TAG: BRE-01/02 · Configuración N+1',
+    color: '#00d4ff',
+    body: `<strong>Configuración:</strong> 2 bombas en paralelo (N+1). Funcionamiento alternado automático (temporizador semanal). En caso de avería de una, la otra asume el 100% del caudal.<br><br>
+    <strong>Prefiltro de canasta:</strong> obligatorio antes de la entrada a la bomba. Retención de sólidos >3 mm. Limpieza mínima diaria.<br><br>
+    <strong>Material:</strong> cuerpo de PP, impulsor PP/PVDF, eje en AISI 316L. Protección IP55 mínimo para sala técnica húmeda.<br><br>
+    <strong>Selección:</strong> Q [m³/h] = Vol. vaso / T<sub>rec</sub>. Altura manométrica = suma pérdidas de carga (filtros + ICT + tuberías + accesorios) + altura geométrica.`,
+    specs: [
+      {l:'Configuración', v:'N+1 paralelo', c:''},
+      {l:'Material', v:'PP / PVDF', c:'green'},
+      {l:'IP eléctrico', v:'IP 55', c:'amber'},
+      {l:'Prefiltro', v:'Obligatorio', c:'red'}
+    ]
+  },
+  'filtro': {
+    title: 'Filtro de Arena Multiplex',
+    sub: 'TAG: FLT-01...N · Arena SiO₂ 0.5-1.0 mm',
+    color: '#00d4ff',
+    body: `<strong>Medio filtrante:</strong> Arena de cuarzo silíceo, granulometría 0.5–1.0 mm, capa de 70–90 cm de profundidad. Alternativas: zeolitas (mejor eficiencia), vidrio reciclado (verde/azul).<br><br>
+    <strong>Velocidad de filtración:</strong> ≤30 m³/h·m² en piscinas públicas / ≤50 m³/h·m² en privadas. La menor velocidad = mayor calidad de filtrado.<br><br>
+    <strong>Válvula multipuerto 6 vías:</strong> Filtración / Retrolavado / Enjuague / Recirculación / Vaciado / Cerrado.<br><br>
+    <strong>Contralavado:</strong> Cuando ΔP > 30–50 kPa. Velocidad: 25–40 m/h durante 5–8 min. Enjuague posterior 1–3 min.`,
+    specs: [
+      {l:'V<sub>f</sub> máx (pública)', v:'30 m³/h·m²', c:''},
+      {l:'Arena granulom.', v:'0.5–1.0 mm', c:'green'},
+      {l:'Contralavado ΔP', v:'> 30 kPa', c:'amber'},
+      {l:'Vel. retrolavado', v:'25–40 m/h', c:'red'}
+    ]
+  },
+  'vaso-expansion': {
+    title: 'Vaso de Compensación / Expansión',
+    sub: 'TAG: VE-01 · Función Dual',
+    color: '#c084fc',
+    body: `<strong>Función 1 – Compensación hidráulica:</strong> Recoge el agua desbordada cuando los bañistas entran al vaso (desplazamiento de volumen). Capacidad: ~50 L/bañista máximo simultáneo + volumen de retrolavado.<br><br>
+    <strong>Función 2 – Expansión térmica:</strong> En el circuito cerrado de calentamiento, absorbe las dilataciones del fluido (aproximadamente 0.3–0.4% del volumen del circuito por cada 10°C de incremento).<br><br>
+    <strong>Posición:</strong> En el circuito de filtración, el vaso de compensación (overflow) recibe el agua del canal perimetral por gravedad y la bombea al circuito de filtración. El vaso de expansión del circuito térmico es un elemento separado con membrana.`,
+    specs: [
+      {l:'Vol. compen.', v:'≥50L/bañista', c:'purple'},
+      {l:'Llenado auto', v:'V.flotador + AR', c:'green'},
+      {l:'Exp. térmica', v:'~0.3–0.4%/10°C', c:'amber'},
+      {l:'Membrana', v:'EPDM / Butilo', c:''}
+    ]
+  },
+  'intercambiador': {
+    title: 'Intercambiador de Calor (ICT)',
+    sub: 'TAG: ICT-01 · Titanio Grado 1 (lado piscina)',
+    color: '#ff3d5a',
+    body: `<strong>Tipo:</strong> Placas desmontables (mayor superficie de intercambio en menor volumen) o carcasa-tubos.<br><br>
+    <strong>Material obligatorio:</strong> Titanio Grado 1 en el lado en contacto con agua de piscina (agua clorada corroe el acero inox por picadura). Circuito primario (agua del generador): puede ser AISI 316L.<br><br>
+    <strong>Aislamiento total de circuitos:</strong> Los dos circuitos no se mezclan. Diseño de doble pared o detección de fugas si hay riesgo de contaminación del agua potable en el circuito primario.<br><br>
+    <strong>Potencia:</strong> calculada para Q<sub>mantenimiento</sub> + margen 20–30%. Circuito secundario: Q = caudal de recirculación. Circuito primario: caudal de la bomba de calor según fabricante.`,
+    specs: [
+      {l:'Material lado piscina', v:'Titanio Gr.1', c:'red'},
+      {l:'Tipo', v:'Placas desmont.', c:''},
+      {l:'Circuitos', v:'100% separados', c:'green'},
+      {l:'Posición', v:'Post-filtro, pre-DOS', c:'amber'}
+    ]
+  },
+  'lamparas-uv': {
+    title: 'Desinfección por Radiación UV',
+    sub: 'TAG: UV-01 · UNE-EN 13451-7 · 400 J/m² mín.',
+    color: '#c084fc',
+    body: `<strong>Función:</strong> Desinfección complementaria. La UV-C destruye el ADN de microorganismos (bacterias, virus, Cryptosporidium) sin añadir subproductos al agua. Además reduce las cloraminas (responsables de la irritación ocular y olor a "cloro") hasta en un 80%.<br><br>
+    <strong>Dosis mínima:</strong> 400 J/m² según UNE-EN 13451-7. Verificada con sensores de fluencia cada 6 meses.<br><br>
+    <strong>Posición:</strong> Aguas abajo del filtro, ANTES del punto de dosificación de cloro. El cloro actúa como desinfectante residual en el vaso; la UV actúa en el circuito.<br><br>
+    <strong>Lámparas LP vs MP:</strong> Baja presión (LP) más eficiente energéticamente para Q &lt; 150 m³/h. Media presión (MP) para grandes caudales.`,
+    specs: [
+      {l:'Dosis mín.', v:'400 J/m²', c:'purple'},
+      {l:'Reducción cloraminas', v:'≤80%', c:'green'},
+      {l:'Vida lámpara LP', v:'9.000–12.000h', c:'amber'},
+      {l:'Cambio cuando', v:'Transmit. <70%', c:'red'}
+    ]
+  },
+  'dosificador': {
+    title: 'Dosificador Automático pH/Cl',
+    sub: 'TAG: DOS-01...3 · Art. 7 RD 742/2013 (obligatorio)',
+    color: '#f5d800',
+    body: `<strong>Obligatorio por normativa</strong> (Art. 7 RD 742/2013) en nuevas piscinas o reformas constructivas. Sistemas automáticos o semiautomáticos.<br><br>
+    <strong>Analizador en línea:</strong> Sonda de pH (electrodo de vidrio o ISFET) + sonda ORP/redox (electrodo de platino). Lectura continua cada 1–5 min. Controlador PID.<br><br>
+    <strong>Productos dosificados:</strong><br>
+    — Hipoclorito sódico 150 g/L (desinfectante)<br>
+    — Ácido clorhídrico 30% o ácido sulfúrico (corrección pH)<br>
+    — Floculante (poliacrilato sódico o alúmina): reduce turbidez<br><br>
+    <strong>Posición:</strong> SIEMPRE aguas abajo del filtro y UV, y aguas arriba de las bocas de impulsión.`,
+    specs: [
+      {l:'Cloro libre', v:'0.5–2 mg/L', c:''},
+      {l:'pH objetivo', v:'7.2–7.8', c:'amber'},
+      {l:'ORP objetivo', v:'≥720 mV', c:'green'},
+      {l:'Art. normativa', v:'RD 742/2013 Art.7', c:'red'}
+    ]
+  },
+  'contador': {
+    title: 'Contadores de Caudal',
+    sub: 'TAG: CM-01/02 · Art. 28 RD 742/2013 (OBLIGATORIOS)',
+    color: '#39ff89',
+    body: `<strong>Obligatorio 2 contadores</strong> (Art. 28 RD 742/2013):<br><br>
+    <strong>CM-01:</strong> A la entrada del agua de alimentación/llenado. Registra el volumen de agua de red consumido. Permite verificar la renovación mínima diaria (≥5% del volumen del vaso).<br><br>
+    <strong>CM-02:</strong> Post-filtración y pre-desinfección. Registra el volumen de agua recirculada. Permite verificar el tiempo de recirculación real.<br><br>
+    <strong>Tipo recomendado:</strong> Caudalímetro electromagnético (sin partes móviles, mínimo mantenimiento, alta precisión) o Woltmann para tuberías >DN100.<br><br>
+    <strong>Registro:</strong> Lecturas anotadas en Libro de Control de Piscina. Dato exigido en inspecciones sanitarias.`,
+    specs: [
+      {l:'Nº obligatorio', v:'2 uds.', c:'green'},
+      {l:'Tipo recomend.', v:'Electromagn.', c:''},
+      {l:'CM-01 posición', v:'Agua alimentac.', c:'amber'},
+      {l:'CM-02 posición', v:'Post-filtro', c:'blue'}
+    ]
+  },
+  'boca-impulsion': {
+    title: 'Bocas de Impulsión (retorno)',
+    sub: 'TAG: BI-01...N · UNE-EN 13451-4',
+    color: '#00ffcc',
+    body: `<strong>Función:</strong> Retornan el agua filtrada, climatizada y desinfectada al vaso. Su orientación y posición determinan la hidrodinámica del vaso.<br><br>
+    <strong>Distribución óptima:</strong> combinación de bocas en pared (a 45° descendente) + en fondo. Genera circulación helicoidal tridimensional: agua limpia fría impulsa el agua desde el fondo, forzando la suciedad hacia los sumideros y skimmers.<br><br>
+    <strong>Velocidad de salida:</strong> ≤0.5 m/s en zona de bañistas (UNE-EN 13451-4). Regla: 1 boca / 25 m² de superficie de lámina de agua.<br><br>
+    <strong>Material:</strong> ABS o PP con tapa de seguridad anti-enganche. Abertura máxima de paso: 8 mm.`,
+    specs: [
+      {l:'V salida bañistas', v:'≤0.5 m/s', c:'green'},
+      {l:'Ratio', v:'1/25 m² lámina', c:''},
+      {l:'Ángulo', v:'45° descendente', c:'amber'},
+      {l:'Material', v:'ABS/PP', c:''}
+    ]
+  },
+  'llenado': {
+    title: 'Sistema de Llenado y Reposición',
+    sub: 'TAG: LL-01 · Art. 23 RD 742/2013',
+    color: '#39ff89',
+    body: `<strong>Función:</strong> Repone el agua perdida por evaporación, salpicadura, contralavados y renovación mínima obligatoria.<br><br>
+    <strong>Antirretorno obligatorio</strong> (Art. 23 RD 742/2013): dispositivo antirretorno que impide el retorno del agua del vaso a la red de distribución pública. Mínimo válvula de retención de muelle. Recomendado: desconector tipo BA o CA (contra contaminación de alta/baja probabilidad).<br><br>
+    <strong>Control automático:</strong> solenoide + sensor de nivel (ultrasónico o flotador). El nivel del vaso se mantiene en el labio del skimmer o borde del canal overflow.<br><br>
+    <strong>Renovación mínima:</strong> ≥5% del volumen del vaso al día (práctica mayoritaria de CCAA).`,
+    specs: [
+      {l:'Antirretorno', v:'Obligatorio', c:'red'},
+      {l:'Tipo AR', v:'Válv. muelle/BA', c:'amber'},
+      {l:'Renovación mín.', v:'≥5% V/día', c:'green'},
+      {l:'Control nivel', v:'Solenoide auto', c:''}
+    ]
+  },
+  'desagues': {
+    title: 'Desagüe y Vaciado del Vaso',
+    sub: 'TAG: DRN-01 · Vaciado en ≤12h',
+    color: '#ffb700',
+    body: `<strong>Función:</strong> Vaciado total del vaso para limpieza, mantenimiento o emergencia.<br><br>
+    <strong>Tiempo de vaciado:</strong> En vasos &lt;500 m³, recomendable &lt;12h. Calcular diámetro de la tubería de vaciado con la fórmula de Torricelli o hidráulica de tuberías bajo presión.<br><br>
+    <strong>Válvula de vaciado:</strong> Compuerta (VCO) o mariposa DN100–DN150 mínimo. Con contrabrida y junta. Normalmente el sumidero de fondo también actúa como toma de vaciado mediante válvula de tres vías.<br><br>
+    <strong>Destino del agua:</strong> Red de saneamiento/alcantarillado. Verificar capacidad de la red receptora. Puede requerir autorización de vertido (agua clorada).`,
+    specs: [
+      {l:'Ø mínimo válvula', v:'DN100', c:''},
+      {l:'Tiempo vaciado', v:'≤12h (<500m³)', c:'amber'},
+      {l:'Destino', v:'Red saneamiento', c:'green'},
+      {l:'Tipo válvula', v:'Compuerta / mariposa', c:''}
+    ]
+  },
+  'desbordamiento': {
+    title: 'Canal de Desbordamiento (Overflow)',
+    sub: 'TAG: CD-01 · Sistema perimetral continuo',
+    color: '#00d4ff',
+    body: `<strong>Función:</strong> Recoge el agua que rebosa por el borde del vaso, tanto la producida por el desplazamiento de bañistas como la lámina superficial rica en contaminantes.<br><br>
+    <strong>Tipos:</strong><br>
+    — Skimmer estándar: boca integrada en pared, captura solo capa superficial local.<br>
+    — Canal overflow perimetral: canaleta continua en todo el perímetro. Mayor eficiencia de recogida. Obligatorio en piscinas de competición.<br><br>
+    <strong>Capacidad del canal:</strong> ≥ 2 L/m de perímetro en piscinas de alta ocupación. Pendiente hacia sumidero de colección ≥1%.<br><br>
+    <strong>Destino:</strong> Vaso de compensación (no directamente a filtración para evitar sobrecarga hidráulica puntual).`,
+    specs: [
+      {l:'Pendiente canal', v:'≥1%', c:''},
+      {l:'Capacidad', v:'≥2L/m perim.', c:'green'},
+      {l:'Destino', v:'Vaso compensac.', c:'amber'},
+      {l:'Sistema mejor', v:'Overflow perimetral', c:''}
+    ]
+  }
+};
+
+function showDetail(key) {
+  const d = details[key];
+  if (!d) return;
+  const box = document.getElementById('detail-box');
+  const specHtml = d.specs ? `<div class="spec-grid">${d.specs.map(s =>
+    `<div class="spec-item"><div class="spec-label">${s.l}</div><div class="spec-value ${s.c}">${s.v}</div></div>`
+  ).join('')}</div>` : '';
+  box.innerHTML = `
+    <div class="detail-title" style="color:${d.color}">${d.title}</div>
+    <div class="detail-subtitle">${d.sub}</div>
+    <div class="detail-body">${d.body}</div>
+    ${specHtml}
+  `;
+  document.querySelectorAll('.element-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// ── CÁLCULO HIDRÁULICO ──
+function calcHidraulico() {
+  const L  = parseFloat(document.getElementById('inp-L').value);
+  const B  = parseFloat(document.getElementById('inp-B').value);
+  const H  = parseFloat(document.getElementById('inp-H').value);
+  const T  = parseFloat(document.getElementById('inp-tipo').value);
+  const Vf = parseFloat(document.getElementById('inp-Vf').value);
+  const Nf = parseFloat(document.getElementById('inp-Nf').value);
+
+  const V  = L * B * H;
+  const Q  = V / T;
+  const SF = Q / Vf;
+  const Sf_ud = SF / Nf;
+  const Df = 2 * Math.sqrt(Sf_ud / Math.PI) * 1000; // mm
+
+  const Va_max = 2.5; // m/s
+  const Vi_max = 3.0;
+  const Da = Math.sqrt(4 * (Q/3600) / (Math.PI * Va_max)) * 1000;
+  const Di = Math.sqrt(4 * (Q/3600) / (Math.PI * Vi_max)) * 1000;
+
+  const SLamina = L * B;
+  const Nsm = Math.ceil(Math.max(2*(L+B)/6, SLamina/25));
+  const Nbi = Math.ceil(SLamina / 25);
+
+  // DN normalizado
+  function dnNorm(d) {
+    const dns = [25,32,40,50,63,75,90,110,125,140,160,200,250,315,400];
+    for (let n of dns) if (n >= d) return n;
+    return Math.ceil(d/10)*10;
+  }
+
+  document.getElementById('r-V').textContent  = V.toFixed(1);
+  document.getElementById('r-Q').textContent  = Q.toFixed(1);
+  document.getElementById('r-SF').textContent = SF.toFixed(2);
+  document.getElementById('r-Df').textContent = Math.round(Df);
+  document.getElementById('r-Da').textContent = 'DN ' + dnNorm(Da);
+  document.getElementById('r-Di').textContent = 'DN ' + dnNorm(Di);
+  document.getElementById('r-Nsm').textContent = Nsm;
+  document.getElementById('r-Nbi').textContent = Nbi;
+  document.getElementById('kpi-q').textContent = Q.toFixed(0);
+
+  document.getElementById('result-grid').style.display = 'grid';
+}
+
+// ── CHARTS ──
+let chartBombaInstance = null;
+let chartCalorInstance = null;
+
+function initChartBomba() {
+  const ctx = document.getElementById('chartBomba');
+  if (!ctx) return;
+  if (chartBombaInstance) { chartBombaInstance.destroy(); chartBombaInstance = null; }
+
+  // Curva bomba típica Q-H y curva sistema
+  const qPts = [0, 10, 20, 30, 40, 50, 60, 70, 80];
+  const hBomba = [22, 21.5, 20.5, 19, 17, 14.5, 11, 7, 0];
+  const hSist  = [3, 3.4, 4.2, 5.5, 7.5, 10, 13, 16.5, 20];
+
+  chartBombaInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: qPts,
+      datasets: [
+        { label: 'Curva Bomba H(m)',       data: hBomba, borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,0.08)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:'#00d4ff' },
+        { label: 'Curva Sistema ΔH(m)',     data: hSist,  borderColor:'#ff8c42', backgroundColor:'rgba(255,140,66,0.08)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:'#ff8c42', borderDash:[5,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color:'#8db3cc', font: { family:'Share Tech Mono', size:11 } } },
+        tooltip: { backgroundColor:'#0c1829', borderColor:'#1a2e4a', borderWidth:1, titleColor:'#00d4ff', bodyColor:'#8db3cc' }
+      },
+      scales: {
+        x: { title: { display:true, text:'Caudal Q (m³/h)', color:'#4a6a82' }, ticks:{color:'#4a6a82'}, grid:{color:'rgba(255,255,255,0.04)'} },
+        y: { title: { display:true, text:'Altura H (m.c.a.)', color:'#4a6a82' }, ticks:{color:'#4a6a82'}, grid:{color:'rgba(255,255,255,0.04)'} }
+      }
+    }
+  });
+}
+
+function initChartCalor() {
+  const ctx = document.getElementById('chartCalor');
+  if (!ctx) return;
+  if (chartCalorInstance) { chartCalorInstance.destroy(); chartCalorInstance = null; }
+
+  chartCalorInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Evaporación (~70%)', 'Radiación (~12%)', 'Convección (~10%)', 'Conducción (~8%)'],
+      datasets: [{
+        data: [70, 12, 10, 8],
+        backgroundColor: ['rgba(255,77,109,0.7)','rgba(255,183,0,0.7)','rgba(0,212,255,0.7)','rgba(57,255,137,0.7)'],
+        borderColor: ['#ff4d6d','#ffb700','#00d4ff','#39ff89'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'right', labels: { color:'#8db3cc', font:{family:'Share Tech Mono', size:10}, padding:12, boxWidth:14 } },
+        tooltip: { backgroundColor:'#0c1829', borderColor:'#1a2e4a', borderWidth:1, titleColor:'#00d4ff', bodyColor:'#8db3cc' }
+      }
+    }
+  });
+}
+
+// ── MERMAID CONFIG ──
+mermaid.initialize({
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#0c1829',
+    primaryTextColor: '#00d4ff',
+    primaryBorderColor: '#1a2e4a',
+    lineColor: '#00d4ff',
+    secondaryColor: '#111f35',
+    tertiaryColor: '#060d1a',
+    background: '#060d1a',
+    mainBkg: '#0c1829',
+    edgeLabelBackground: '#0c1829',
+    fontFamily: 'Share Tech Mono'
+  }
+});
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  // Trigger calc si hay valores por defecto
+});
+</script>
+</body>
+</html>
