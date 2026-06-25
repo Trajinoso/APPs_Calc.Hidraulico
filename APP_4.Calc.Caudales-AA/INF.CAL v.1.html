@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>MEP-002 · Reporte Formal de Caudales (HVAC)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* ===== Estilos generales (pantalla) ===== */
+    :root {
+      --bg: #0f1115;
+      --panel: #151922;
+      --panel-2: #1b2030;
+      --txt: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #60a5fa;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --border: #243046;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --radius: 12px;
+      --pad: 14px;
+      --paper-bg: #ffffff;
+      --ink: #111827;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--txt);
+      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    header.toolbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+    }
+    header .left { display: flex; align-items: center; gap: 10px; }
+    header h1 { margin: 0; font-size: 16px; }
+    header .meta { color: var(--muted); font-size: 12px; }
+    .toolbar .actions { display: flex; gap: 8px; }
+    button {
+      background: var(--panel-2); color: var(--txt); border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 10px; cursor: pointer;
+    }
+    button:hover { background: #22304a; }
+    .container {
+      padding: 16px; display: grid; gap: 16px;
+      grid-template-columns: 340px 1fr;
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--pad);
+    }
+    .card h2 { margin: 0 0 10px; font-size: 15px; }
+    .g { display: grid; gap: 8px; }
+    .field { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    .field label { font-size: 12px; color: var(--muted); }
+    .field input, .field textarea {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--txt);
+      font: inherit;
+    }
+    .row { display: flex; gap: 8px; }
+    .row .field { flex: 1; }
+    .note { font-size: 12px; color: var(--muted); }
+    .hidden { display: none !important; }
+
+    /* Vista previa en “papel” (pantalla) */
+    .paper {
+      background: var(--paper-bg); color: var(--ink);
+      border-radius: 8px; padding: 24px; border: 1px solid #e5e7eb;
+    }
+    .paper h1, .paper h2, .paper h3 { color: #0f172a; margin: 0 0 8px; }
+    .paper h1 { font-size: 22px; }
+    .paper h2 { font-size: 18px; margin-top: 14px; }
+    .paper h3 { font-size: 15px; margin-top: 10px; }
+    .paper .muted { color: #6b7280; }
+    .paper .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .paper .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .paper .kv { display: grid; grid-template-columns: 200px 1fr; gap: 8px; }
+    .hr { height: 1px; background: #e5e7eb; margin: 14px 0; }
+    .tbl { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .tbl th, .tbl td { border-bottom: 1px solid #e5e7eb; padding: 6px 6px; text-align: left; font-size: 13px; }
+    .tbl th { background: #f8fafc; color: #0f172a; }
+    .r { text-align: right; }
+    .mono { font-family: var(--mono); }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #312e81; font-size: 12px; border: 1px solid #c7d2fe; }
+    .mutewarn { color: #92400e; }
+    .small { font-size: 12px; }
+    .cover {
+      display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 16px;
+    }
+    .cover img { max-height: 56px; max-width: 240px; object-fit: contain; }
+    .page-break { page-break-before: always; margin-top: 24px; }
+
+    /* ===== Impresión (A4) ===== */
+    @page {
+      size: A4;
+      margin: 18mm 15mm 20mm 15mm;
+    }
+    @media print {
+      body { background: white; color: black; }
+      header.toolbar, .container > .card { display: none !important; }
+      .paper { border: none; border-radius: 0; box-shadow: none; }
+      /* Encabezado/pie fijo */
+      .print-header, .print-footer {
+        position: fixed; left: 0; right: 0; color: #6b7280; font-size: 11px;
+      }
+      .print-header { top: 6mm; }
+      .print-footer { bottom: 6mm; }
+      .print-header .inner, .print-footer .inner { margin: 0 15mm; display: flex; justify-content: space-between; }
+      /* Numeración simple (algunos navegadores no soportan total páginas) */
+      .page-number:after { content: counter(page); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra de herramientas (pantalla) -->
+  <header class="toolbar">
+    <div class="left">
+      <h1>MEP-002 · Reporte de Caudales</h1>
+      <div class="meta">Formal · A4 · Listo para imprimir</div>
+    </div>
+    <div class="actions">
+      <button id="btnLoad">Cargar JSON</button>
+      <button id="btnPrint">Imprimir / PDF</button>
+    </div>
+  </header>
+
+  <!-- Panel de control (pantalla) -->
+  <div class="container">
+    <section class="card">
+      <h2>Metadatos del informe</h2>
+      <div class="g">
+        <div class="field">
+          <label>URL del logotipo (opcional)</label>
+          <input id="logoUrl" type="url" placeholder="https://.../logo.png" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Proyecto</label>
+            <input id="proj" type="text" placeholder="Nombre del proyecto" />
+          </div>
+          <div class="field">
+            <label>Cliente</label>
+            <input id="client" type="text" placeholder="Entidad / Cliente" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Localización</label>
+            <input id="site" type="text" placeholder="Ciudad / Obra" />
+          </div>
+          <div class="field">
+            <label>Redactado por</label>
+            <input id="author" type="text" placeholder="Nombre y cargo" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Fecha</label>
+            <input id="date" type="date" />
+          </div>
+          <div class="field">
+            <label>Revisión</label>
+            <input id="rev" type="text" placeholder="v1.0.0" />
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:12px">JSON de resultados</h2>
+      <div class="g">
+        <div class="field">
+          <label>Pega aquí el JSON copiado desde la herramienta (botón “Copiar”)</label>
+          <textarea id="jsonInput" rows="12" class="mono" placeholder='{
+  "id": "MEP-002",
+  "version": "1.0.0",
+  "global": { "H_mca": 15, "eta": 0.65, "v_sec_ms": 1.2, "v_pri_ms": 2.0, "Q_bypass_min_m3h": 20 },
+  "circuits": [
+    { "name": "Frío – UTA", "mode": "frio", "P_kW": 500, "Ti_C": 7,  "Tr_C": 12, "critico": true },
+    { "name": "Calor – Fancoils", "mode": "calor", "P_kW": 300, "Ti_C": 50, "Tr_C": 30, "critico": false }
+  ]
+}'></textarea>
+        </div>
+        <div class="note">El reporte recalcula ρ(Tₘ), Cp(Tₘ), Q, ṁ, DN y Pₕ con las mismas correlaciones de la herramienta.</div>
+      </div>
+    </section>
+
+    <!-- Vista previa del informe (pantalla) -->
+    <section class="paper" id="report">
+      <!-- Encabezado/pie impresos -->
+      <div class="print-header">
+        <div class="inner">
+          <div id="hdr-left">MEP‑002 · Cálculo de Caudales (HVAC)</div>
+          <div id="hdr-right" class="small"></div>
+        </div>
+      </div>
+      <div class="print-footer">
+        <div class="inner">
+          <div class="small muted">RITE · UNE‑EN 12828 · CTE HE‑2 · Uso informativo</div>
+          <div class="small">Página <span class="page-number"></span></div>
+        </div>
+      </div>
+
+      <!-- PORTADA -->
+      <div class="cover">
+        <div>
+          <h1>Reporte de Cálculo de Caudales</h1>
+          <div class="muted">ID: <b>MEP‑002</b> · Disciplina: <b>HVAC</b> · Tecnología: <b>HTML/JS (client‑side)</b></div>
+          <div class="hr"></div>
+          <div class="kv">
+            <div>Proyecto</div><div id="p-proj">—</div>
+            <div>Cliente</div><div id="p-client">—</div>
+            <div>Localización</div><div id="p-site">—</div>
+            <div>Redactado por</div><div id="p-author">—</div>
+            <div>Fecha</div><div id="p-date">—</div>
+            <div>Revisión</div><div id="p-rev">—</div>
+          </div>
+        </div>
+        <div>
+          <img id="p-logo" alt="Logo" />
+        </div>
+      </div>
+
+      <!-- RESUMEN EJECUTIVO -->
+      <h2>1. Resumen ejecutivo</h2>
+      <div class="grid3">
+        <div>
+          <h3>Parámetros globales</h3>
+          <table class="tbl">
+            <tbody>
+              <tr><th>Altura manométrica H</th><td class="r" id="g-H">—</td></tr>
+              <tr><th>Rendimiento η</th><td class="r" id="g-eta">—</td></tr>
+              <tr><th>v<sub>sec</sub> objetivo</th><td class="r" id="g-vsec">—</td></tr>
+              <tr><th>v<sub>pri</sub> objetivo</th><td class="r" id="g-vpri">—</td></tr>
+              <tr><th>Q<sub>bypass min</sub></th><td class="r" id="g-qb">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3>Caudales globales</h3>
+          <table class="tbl">
+            <tbody>
+              <tr><th>Σ Q (m³/h)</th><td class="r" id="sum-Qh">—</td></tr>
+              <tr><th>Σ Q (l/s)</th><td class="r" id="sum-Ql">—</td></tr>
+              <tr><th>Q<sub>bypass</sub> / Q<sub>nom</sub></th><td class="r" id="sum-byr">—</td></tr>
+              <tr><th>P<sub>h</sub> estimada (kW)</th><td class="r" id="sum-Ph">—</td></tr>
+              <tr><th>Punto de diseño</th><td class="r" id="sum-QH">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3>Línea primaria</h3>
+          <table class="tbl">
+            <tbody>
+              <tr><th>DN primario (orientativo)</th><td class="r" id="sum-DNpri">—</td></tr>
+              <tr><th>v<sub>pri</sub> resultante</th><td class="r" id="sum-vpri">—</td></tr>
+              <tr><th>Serie DN</th><td class="r">EN 10255/EN 10220 (orientativa)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DETALLE POR CIRCUITO -->
+      <div class="page-break"></div>
+      <h2>2. Detalle por circuito</h2>
+      <table class="tbl" id="tbl-circuits">
+        <thead>
+          <tr>
+            <th>Circuito</th>
+            <th>Modo</th>
+            <th class="r">P (kW)</th>
+            <th class="r">T<sub>i</sub> / T<sub>r</sub> (°C)</th>
+            <th class="r">ΔT (K)</th>
+            <th class="r">T<sub>m</sub> (°C)</th>
+            <th class="r">ρ (kg/m³)</th>
+            <th class="r">Cp (kJ/kgK)</th>
+            <th class="r">Q (m³/h)</th>
+            <th class="r">Q (l/s)</th>
+            <th class="r">ṁ (kg/s)</th>
+            <th class="r">DN sec.</th>
+            <th>Crítico</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <!-- METODOLOGÍA -->
+      <div class="page-break"></div>
+      <h2>3. Metodología y fórmulas</h2>
+      <p><b>Fórmula base de caudal:</b> <span class="mono">V = P / (ρ · Cp · ΔT)</span>, con:
+        P [kW], ρ [kg/m³], Cp [kJ/kg·K], ΔT [K = °C]. Resultados en l/s; conversión a m³/h multiplicando por 3,6.</p>
+      <p><b>Caudal másico:</b> <span class="mono">ṁ = ρ · Q</span>. &nbsp;
+         <b>Potencia hidráulica estimada:</b> <span class="mono">Pₕ ≈ ρ·g·Q·H/η</span> (g = 9,81 m/s²).</p>
+      <p><b>Temperatura media:</b> <span class="mono">Tₘ = (T<sub>i</sub> + T<sub>r</sub>)/2</span>.</p>
+      <p><b>Propiedades del agua (correlaciones, 5–80 °C):</b></p>
+      <ul>
+        <li>Densidad: ecuación de Kell (0–100 °C). <span class="mono">ρ(T) = 1000 · [1 − ((T+288,9414)/(508 929,2·(T+68,12963)))·(T−3,9863)²]</span></li>
+        <li>Calor específico (kJ/kg·K): ajuste cuadrático (mínimo ≈ 35 °C). <span class="mono">Cp(T) = 4,2176 − 0,001732264·T + 0,00001716264·T²</span></li>
+      </ul>
+      <p class="small muted">DN sugerido por velocidad objetivo: <span class="mono">D = √(4Q/πv)</span>, redondeo a serie DN comercial (orientativa; verificar familia de tubos, rugosidad y espesores reales).</p>
+
+      <!-- NORMATIVA -->
+      <h2>4. Normativa y criterios de diseño (informativos)</h2>
+      <ul>
+        <li><b>RITE</b> – IT 1.2.4.2: eficiencia en el transporte de fluidos y optimización de ΔT.</li>
+        <li><b>UNE‑EN 12828</b> – Sistemas de calefacción en edificios.</li>
+        <li><b>CTE HE‑2</b> – Rendimiento de las instalaciones térmicas.</li>
+      </ul>
+      <p class="small muted">ΔT típicos: Frío 5 °C; Calor 10–20 °C (alta eficiencia con 20 °C).</p>
+
+      <!-- LEGAL / VERSIÓN -->
+      <h2>5. Avisos y versión</h2>
+      <p class="small"><b>Disclaimer:</b> Herramienta de apoyo. No sustituye el cálculo de ingeniería detallado ni la selección de bombas según curvas de fabricante. NPSH no evaluado (requiere datos de aspiración y curva del equipo).</p>
+      <p class="small">ID: <b id="v-id">—</b> · Versión herramienta: <b id="v-tool">—</b> · Versión informe: <b id="v-report">1.0.0</b></p>
+    </section>
+  </div>
+
+  <script>
+    // ===== Utilidades =====
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const round = (x, d=2) => Number.isFinite(x) ? Number.parseFloat(x).toFixed(d) : '—';
+
+    // ===== Propiedades del agua =====
+    function rhoWater(Tc) {
+      const T = Tc;
+      const rho = 1000 * (1 - ((T + 288.9414) / (508929.2 * (T + 68.12963))) * Math.pow(T - 3.9863, 2));
+      return rho;
+    }
+    function cpWater(Tc) {
+      const T = Tc;
+      const cp = 4.2176 - 0.001732264 * T + 0.00001716264 * T * T; // kJ/kgK
+      return cp;
+    }
+
+    // ===== Serie DN (orientativa) → diámetro interior aprox (mm) =====
+    const DN_SERIES = [
+      { dn: 'DN15',  di_mm: 16 },  { dn: 'DN20',  di_mm: 21 },  { dn: 'DN25',  di_mm: 27 },
+      { dn: 'DN32',  di_mm: 35 },  { dn: 'DN40',  di_mm: 41 },  { dn: 'DN50',  di_mm: 53 },
+      { dn: 'DN65',  di_mm: 69 },  { dn: 'DN80',  di_mm: 81 },  { dn: 'DN100', di_mm: 102 },
+      { dn: 'DN125', di_mm: 127 }, { dn: 'DN150', di_mm: 153 }, { dn: 'DN200', di_mm: 202 },
+      { dn: 'DN250', di_mm: 254 }, { dn: 'DN300', di_mm: 303 }
+    ];
+    function suggestDNfromQ(Q_m3s, v_obj_ms) {
+      if (Q_m3s <= 0 || v_obj_ms <= 0) return { dn: '—', di_mm: NaN, v_ms: 0 };
+      const A = Q_m3s / v_obj_ms; // m2
+      const D_m = Math.sqrt((4 * A) / Math.PI);
+      const D_mm = D_m * 1000;
+      let pick = DN_SERIES.find(x => x.di_mm >= D_mm);
+      if (!pick) pick = DN_SERIES[DN_SERIES.length - 1];
+      const A_sel = Math.PI * Math.pow(pick.di_mm / 1000 / 2, 2);
+      const v_sel = Q_m3s / A_sel;
+      return { dn: pick.dn, di_mm: pick.di_mm, v_ms: v_sel };
+    }
+
+    // ===== Cálculo y pintado del informe =====
+    function computeAndRender(payload) {
+      // Metadatos
+      $('#v-id').textContent = payload?.id ?? '—';
+      $('#v-tool').textContent = payload?.version ?? '—';
+
+      const g = payload?.global ?? {};
+      const circuits = Array.isArray(payload?.circuits) ? payload.circuits : [];
+
+      const H = Number(g.H_mca ?? 0);
+      const eta = Number(g.eta ?? 0.65);
+      const vsec = Number(g.v_sec_ms ?? 1.2);
+      const vpri = Number(g.v_pri_ms ?? 2.0);
+      const Qbypass_h = Number(g.Q_bypass_min_m3h ?? 0);
+
+      // Recalcular por circuito
+      let rows = [];
+      let Qtotal_m3s = 0;
+      let rhoQ_sum = 0;
+      circuits.forEach(c => {
+        const name = c.name ?? 'Circuito';
+        const mode = (c.mode === 'calor') ? 'Calor' : 'Frío';
+        const P = Number(c.P_kW ?? 0);
+        const Ti = Number(c.Ti_C ?? 0);
+        const Tr = Number(c.Tr_C ?? 0);
+        const crit = !!c.critico;
+
+        const dT = Ti - Tr;
+        const Tm = (Ti + Tr) / 2;
+        const valid = (P > 0 && dT > 0);
+
+        let rho = NaN, cp = NaN, Q_m3s = 0, Q_m3h = 0, Q_ls = 0, mdot = 0, pick = {dn:'—', v_ms:0};
+
+        if (valid) {
+          rho = rhoWater(Tm);
+          cp = cpWater(Tm);
+          Q_m3s = (P) / (rho * cp * dT);
+          Q_m3h = Q_m3s * 3600;
+          Q_ls  = Q_m3s * 1000;
+          mdot  = rho * Q_m3s;
+          pick = suggestDNfromQ(Q_m3s, vsec);
+
+          Qtotal_m3s += Q_m3s;
+          rhoQ_sum += rho * Q_m3s; // para ρ medio ponderado por Q
+        }
+
+        rows.push({ name, mode, P, Ti, Tr, dT, Tm, rho, cp, Q_m3s, Q_m3h, Q_ls, mdot, dnSec: pick.dn, v_sec_res: pick.v_ms, crit });
+      });
+
+      // Globales
+      const Qtotal_m3h = Qtotal_m3s * 3600;
+      const Qtotal_ls  = Qtotal_m3s * 1000;
+      const rho_avg = (Qtotal_m3s > 0) ? (rhoQ_sum / Qtotal_m3s) : 998;
+      const DNpri = suggestDNfromQ(Qtotal_m3s, vpri);
+
+      const Ph_kW = (H > 0 && eta > 0) ? (rho_avg * 9.81 * Qtotal_m3s * H / eta) / 1000 : 0;
+      const byr_ratio = (Qtotal_m3h > 0) ? (Qbypass_h / Qtotal_m3h) : 0;
+
+      // Pintar portada / metadatos
+      $('#g-H').textContent = `${round(H,1)} m c.a.`;
+      $('#g-eta').textContent = `${round(eta,2)}`;
+      $('#g-vsec').textContent = `${round(vsec,2)} m/s`;
+      $('#g-vpri').textContent = `${round(vpri,2)} m/s`;
+      $('#g-qb').textContent = `${round(Qbypass_h,1)} m³/h`;
+
+      $('#sum-Qh').textContent = `${round(Qtotal_m3h,2)}`;
+      $('#sum-Ql').textContent = `${round(Qtotal_ls,3)}`;
+      $('#sum-byr').innerHTML  = `${round(Qbypass_h,1)} / ${round(Qtotal_m3h,1)} m³/h (${round(byr_ratio*100,1)}%)`;
+      $('#sum-Ph').textContent = (H>0 && eta>0) ? `${round(Ph_kW,3)}` : '—';
+      $('#sum-QH').textContent = `Q=${round(Qtotal_m3h,2)} m³/h · H=${round(H,1)} m`;
+
+      $('#sum-DNpri').textContent = DNpri.dn;
+      $('#sum-vpri').textContent  = `${round(DNpri.v_ms,2)} m/s`;
+
+      // Tabla de circuitos
+      const tbody = $('#tbl-circuits tbody');
+      tbody.innerHTML = '';
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.mode}</td>
+          <td class="r">${r.P>0 ? round(r.P,0) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? `${round(r.Ti,1)} / ${round(r.Tr,1)}` : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.dT,2) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.Tm,1) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.rho,1) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.cp,4) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.Q_m3h,2) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.Q_ls,3) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? round(r.mdot,2) : '—'}</td>
+          <td class="r">${(r.P>0 && r.dT>0) ? r.dnSec : '—'}</td>
+          <td>${r.crit ? '✅' : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Encabezado imprimible (proyecto, fecha, rev)
+      const metaRight = [];
+      if ($('#p-proj').textContent.trim()) metaRight.push($('#p-proj').textContent.trim());
+      if ($('#p-date').textContent.trim()) metaRight.push($('#p-date').textContent.trim());
+      if ($('#p-rev').textContent.trim())  metaRight.push($('#p-rev').textContent.trim());
+      $('#hdr-right').textContent = metaRight.join(' · ');
+    }
+
+    // ===== Eventos UI =====
+    function loadJsonFromTextarea() {
+      const raw = $('#jsonInput').value.trim();
+      if (!raw) { alert('Pega el JSON de resultados primero.'); return; }
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch (e) {
+        alert('JSON inválido. Revisa la sintaxis.'); return;
+      }
+      // Asegurar estructura mínima
+      if (!payload.global || !Array.isArray(payload.circuits)) {
+        alert('El JSON no tiene la estructura esperada (global + circuits).');
+        return;
+      }
+      // Pintar ID/versión
+      $('#v-id').textContent = payload.id || 'MEP‑002';
+      $('#v-tool').textContent = payload.version || '—';
+
+      // Recalcular y renderizar
+      computeAndRender(payload);
+      alert('JSON cargado y reporte actualizado.');
+    }
+
+    // Asignación de metadatos a la portada
+    function bindMeta() {
+      const metaMap = [
+        { input: '#proj',  out: '#p-proj'  },
+        { input: '#client',out: '#p-client'},
+        { input: '#site',  out: '#p-site'  },
+        { input: '#author',out: '#p-author'},
+        { input: '#date',  out: '#p-date'  },
+        { input: '#rev',   out: '#p-rev'   },
+        { input: '#logoUrl', out: '#p-logo', attr: 'src' }
+      ];
+      metaMap.forEach(m => {
+        const inp = $(m.input); const out = $(m.out);
+        const onChange = () => {
+          if (m.attr === 'src') {
+            out.src = inp.value || '';
+          } else {
+            out.textContent = inp.value || '—';
+          }
+          // Actualiza encabezado imprimible (derecha)
+          const metaRight = [];
+          if ($('#p-proj').textContent.trim()) metaRight.push($('#p-proj').textContent.trim());
+          if ($('#p-date').textContent.trim()) metaRight.push($('#p-date').textContent.trim());
+          if ($('#p-rev').textContent.trim())  metaRight.push($('#p-rev').textContent.trim());
+          $('#hdr-right').textContent = metaRight.join(' · ');
+        };
+        inp.addEventListener('input', onChange);
+      });
+    }
+
+    // Botones
+    $('#btnLoad').addEventListener('click', loadJsonFromTextarea);
+    $('#btnPrint').addEventListener('click', () => window.print());
+
+    // Inicializar fecha por defecto y binder metadatos
+    (function init() {
+      const today = new Date().toISOString().slice(0,10);
+      $('#date').value = today;
+      bindMeta();
+
+      // Ejemplo precargado para vista previa (puedes sustituir pegando tu JSON)
+      const demo = {
+        "id": "MEP-002",
+        "version": "1.0.0",
+        "global": { "H_mca": 15, "eta": 0.65, "v_sec_ms": 1.2, "v_pri_ms": 2.0, "Q_bypass_min_m3h": 20 },
+        "circuits": [
+          { "name": "Frío – UTA", "mode": "frio", "P_kW": 500, "Ti_C": 7,  "Tr_C": 12, "critico": true },
+          { "name": "Calor – Fancoils", "mode": "calor", "P_kW": 300, "Ti_C": 50, "Tr_C": 30, "critico": false }
+        ]
+      };
+      $('#jsonInput').value = JSON.stringify(demo, null, 2);
+      computeAndRender(demo);
+    })();
+  </script>
+</body>
+</html>

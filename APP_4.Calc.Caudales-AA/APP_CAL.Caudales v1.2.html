@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>MEP-002 · Cálculo de Caudales (HVAC) · HTML/JS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #151922;
+      --panel-2: #1b2030;
+      --txt: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #60a5fa;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --border: #243046;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --radius: 12px;
+      --pad: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--txt); font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    }
+    header .title { display: flex; align-items: center; gap: 12px; }
+    header img.logo { height: 28px; width: auto; border-radius: 6px; background: #fff1; padding: 2px; }
+    header h1 { font-size: 16px; margin: 0; }
+    header .meta { color: var(--muted); font-size: 12px; }
+    header .actions { display: flex; gap: 8px; }
+    button, .btn { background: var(--panel-2); color: var(--txt); border: 1px solid var(--border); padding: 9px 12px; border-radius: 10px; cursor: pointer; }
+    button:hover { background: #22304a; }
+    .grid { display: grid; gap: 16px; padding: 16px; grid-template-columns: 360px 1fr; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--pad); }
+    .card h2 { margin: 0 0 10px; font-size: 15px; }
+    .field { display: grid; grid-template-columns: 1fr 120px; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .field label { color: var(--muted); font-size: 13px; }
+    .field input, .field select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel-2); color: var(--txt); }
+    .row { display: flex; gap: 8px; }
+    .row .field { flex: 1; }
+    .circuit { background: var(--panel-2); border: 1px dashed var(--border); padding: 10px; border-radius: 10px; margin-bottom: 12px; }
+    .circuit .row { flex-wrap: wrap; }
+    .muted { color: var(--muted); }
+    .mono { font-family: var(--mono); font-size: 12px; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #00000022; font-size: 12px; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .err { color: var(--err); }
+    .table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .table th, .table td { border-bottom: 1px dashed var(--border); padding: 6px 4px; text-align: left; font-size: 13px; }
+    .table th { color: var(--muted); font-weight: 600; }
+    .r { text-align: right; }
+    .inline-tip { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+    .kpi .item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+    .kpi .item .label { color: var(--muted); font-size: 12px; }
+    .kpi .item .value { font-size: 16px; margin-top: 2px; }
+    .flex { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .note { font-size: 12px; color: var(--muted); }
+    .separator { height: 1px; background: var(--border); margin: 10px 0; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } .kpi { grid-template-columns: repeat(2, 1fr); } header { position: static; } }
+    @media print { header, .actions, .no-print { display: none !important; } body { background: white; color: black; } .card, .circuit { background: white; border: 1px solid #ccc; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <img class="logo" id="logoImg" alt="Logo" src="" />
+      <div>
+        <h1>MEP-002 · Cálculo de Caudales (HVAC)</h1>
+        <div class="meta">Modo oscuro · Client-side puro · v1.0.1</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="copyBtn" title="Copiar resultados al portapapeles">📋 Copiar</button>
+      <button id="printBtn" title="Imprimir/Guardar como PDF">🖨️ Imprimir</button>
+      <button id="examplesBtn" title="Cargar ejemplos">🔄 Ejemplos</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Panel izquierdo: parámetros globales -->
+    <section class="card">
+      <h2>Parámetros globales</h2>
+      <div class="field">
+        <label for="logoUrl" title="URL de logotipo a mostrar en el informe">URL logotipo (opcional)</label>
+        <input id="logoUrl" type="url" placeholder="https://.../logo.png" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="H" title="Altura manométrica agregada del sistema (m c.a.)">H [m c.a.]</label>
+          <input id="H" type="number" step="0.1" min="0" value="15"/>
+        </div>
+        <div class="field">
+          <label for="eta" title="Rendimiento hidráulico global (0–1). Por defecto 0,65">η (bombeo)</label>
+          <input id="eta" type="number" step="0.01" min="0.05" max="0.95" value="0.65"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="vSec" title="Velocidad objetivo en secundarios (m/s). Recomendado 0,8–1,5 m/s">v<sub>sec</sub> [m/s]</label>
+          <input id="vSec" type="number" step="0.05" min="0.2" max="3" value="1.2"/>
+        </div>
+        <div class="field">
+          <label for="vPri" title="Velocidad objetivo en primario (m/s). Recomendado 1,5–2,5 m/s">v<sub>pri</sub> [m/s]</label>
+          <input id="vPri" type="number" step="0.05" min="0.5" max="4" value="2.0"/>
+        </div>
+      </div>
+      <div class="field">
+        <label for="Qbypass" title="Caudal mínimo absoluto de bypass (m³/h) para estabilidad en caudal variable">Q<sub>bypass min</sub> [m³/h]</label>
+        <input id="Qbypass" type="number" step="0.1" min="0" value="20"/>
+      </div>
+
+      <div class="separator"></div>
+      <div class="note">
+        <b>Fórmula base:</b> V = P / (ρ · Cp · ΔT).<br/>
+        ρ(T): ecuación de Kell (0–100 °C). Cp(T): polinomio cuadrático (0–100 °C).<br/>
+        <span class="pill">Referencia informativa: RITE (IT 1.2.4.2), UNE‑EN 12828, CTE HE‑2</span>
+      </div>
+      <div class="inline-tip">
+        <span class="warn">⚠</span> Rangos recomendados de T<sub>m</sub>: 5–80 °C. ΔT típicos: Frío 5 °C; Calor 10–20 °C.
+      </div>
+    </section>
+
+    <!-- Panel derecho: circuitos y resultados -->
+    <section class="card">
+      <h2>Circuitos (paralelo)</h2>
+      <div id="circuits"></div>
+      <div class="flex">
+        <button id="addCircuit">➕ Añadir circuito</button>
+        <span class="note">Puedes marcar un circuito como <b>crítico</b> (solo para referencia de estabilidad).</span>
+      </div>
+
+      <div class="separator"></div>
+
+      <h2>Resultados</h2>
+      <div class="kpi">
+        <div class="item">
+          <div class="label">Σ Q (m³/h)</div>
+          <div class="value" id="Qtotal_m3h">0.00</div>
+          <div class="label">Σ Q (l/s)</div>
+          <div class="value" id="Qtotal_ls">0.000</div>
+        </div>
+        <div class="item">
+          <div class="label">DN primario (orientativo)</div>
+          <div class="value" id="DN_primary">—</div>
+          <div class="label mono">v<sub>pri</sub> aplicado</div>
+          <div class="value mono" id="Vpri_label">—</div>
+        </div>
+        <div class="item">
+          <div class="label">Q<sub>bypass</sub> / Q<sub>nom</sub></div>
+          <div class="value" id="BypassRatio">—</div>
+          <div class="label">Q<sub>crítico</sub> (m³/h)</div>
+          <div class="value" id="Qcrit">—</div>
+        </div>
+        <div class="item">
+          <div class="label">P<sub>h</sub> estimada (kW)</div>
+          <div class="value" id="Ph_kW">—</div>
+          <div class="label mono">Punto diseño</div>
+          <div class="value mono" id="QH_label">—</div>
+        </div>
+      </div>
+
+      <table class="table" id="resultsTable">
+        <thead>
+          <tr>
+            <th>Circuito</th>
+            <th>Modo</th>
+            <th class="r">P (kW)</th>
+            <th class="r">T<sub>i</sub>/T<sub>r</sub> (°C)</th>
+            <th class="r">ΔT (K)</th>
+            <th class="r">T<sub>m</sub> (°C)</th>
+            <th class="r">ρ (kg/m³)</th>
+            <th class="r">Cp (kJ/kgK)</th>
+            <th class="r">Q (m³/h)</th>
+            <th class="r">Q (l/s)</th>
+            <th class="r">ṁ (kg/s)</th>
+            <th class="r">DN sec.</th>
+            <th>Crítico</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="separator"></div>
+      <div class="note">
+        <b>Disclaimer:</b> Herramienta de apoyo. No sustituye el cálculo de ingeniería detallado ni la selección de bombas por curvas de fabricante. NPSH no evaluado (requiere datos de aspiración y curva del fabricante).
+      </div>
+    </section>
+  </div>
+
+  <template id="circuitTemplate">
+    <div class="circuit">
+      <div class="row">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" class="c-name" placeholder="U.T.A. 1 / Fancoils / Primario..." />
+        </div>
+        <div class="field">
+          <label>Modo</label>
+          <select class="c-mode" title="Selecciona Frío o Calor para sugerir ΔT">
+            <option value="frio">Frío</option>
+            <option value="calor">Calor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>P (kW)</label>
+          <input type="number" class="c-P" step="1" min="0.1" value="100"/>
+        </div>
+        <div class="field">
+          <label>T<sub>ida</sub> (°C)</label>
+          <input type="number" class="c-Ti" step="0.1" value="7"/>
+        </div>
+        <div class="field">
+          <label>T<sub>ret</sub> (°C)</label>
+          <input type="number" class="c-Tr" step="0.1" value="12"/>
+        </div>
+      </div>
+      <div class="flex">
+        <label class="muted"><input type="checkbox" class="c-crit"/> Marcar como crítico</label>
+        <span class="pill muted tip-delta"></span>
+        <span class="pill muted tip-range"></span>
+        <span class="pill muted tip-sign"></span>
+      </div>
+      <div class="flex">
+        <button class="btn btn-suggest" title="Aplicar ΔT recomendado (7/12 frío, 50/30 calor)">🎯 Sugerir ΔT</button>
+        <button class="btn btn-del" title="Eliminar circuito">🗑️ Eliminar</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // ===== Utilidades =====
+    const round = (x, d = 2) => Number.isFinite(x) ? Number.parseFloat(x).toFixed(d) : '—';
+    const nf = (x, d=2) => Number.isFinite(x) ? Number(x).toFixed(d) : '—';
+
+    // ===== Propiedades del agua =====
+    function rhoWater(Tc) {
+      const T = Tc;
+      return 1000 * (1 - ((T + 288.9414) / (508929.2 * (T + 68.12963))) * Math.pow(T - 3.9863, 2));
+    }
+    function cpWater(Tc) {
+      const T = Tc;
+      return 4.2176 - 0.001732264 * T + 0.00001716264 * T * T; // kJ/kgK
+    }
+
+    // ===== Serie DN (orientativa) =====
+    const DN_SERIES = [
+      { dn: 'DN15',  di_mm: 16 }, { dn: 'DN20',  di_mm: 21 }, { dn: 'DN25',  di_mm: 27 },
+      { dn: 'DN32',  di_mm: 35 }, { dn: 'DN40',  di_mm: 41 }, { dn: 'DN50',  di_mm: 53 },
+      { dn: 'DN65',  di_mm: 69 }, { dn: 'DN80',  di_mm: 81 }, { dn: 'DN100', di_mm: 102 },
+      { dn: 'DN125', di_mm: 127 },{ dn: 'DN150', di_mm: 153 },{ dn: 'DN200', di_mm: 202 },
+      { dn: 'DN250', di_mm: 254 },{ dn: 'DN300', di_mm: 303 }
+    ];
+    function suggestDNfromQ(Q_m3s, v_obj_ms) {
+      if (!(Q_m3s > 0) || !(v_obj_ms > 0)) return { dn: '—', di_mm: NaN, v_ms: 0 };
+      const A = Q_m3s / v_obj_ms; // m²
+      const D_m = Math.sqrt((4 * A) / Math.PI);
+      const D_mm = D_m * 1000;
+      let pick = DN_SERIES.find(x => x.di_mm >= D_mm);
+      if (!pick) pick = DN_SERIES[DN_SERIES.length - 1];
+      const A_sel = Math.PI * Math.pow(pick.di_mm / 1000 / 2, 2);
+      const v_sel = Q_m3s / A_sel;
+      return { dn: pick.dn, di_mm: pick.di_mm, v_ms: v_sel };
+    }
+
+    // ===== Estado y DOM =====
+    const circuitsEl = document.getElementById('circuits');
+    const tpl = document.getElementById('circuitTemplate');
+    const addBtn = document.getElementById('addCircuit');
+
+    const HEl = document.getElementById('H');
+    const etaEl = document.getElementById('eta');
+    const vSecEl = document.getElementById('vSec');
+    const vPriEl = document.getElementById('vPri');
+    const QbypassEl = document.getElementById('Qbypass');
+    const logoUrlEl = document.getElementById('logoUrl');
+    const logoImgEl = document.getElementById('logoImg');
+
+    const Qtotal_m3hEl = document.getElementById('Qtotal_m3h');
+    const Qtotal_lsEl = document.getElementById('Qtotal_ls');
+    const DN_primaryEl = document.getElementById('DN_primary');
+    const VpriLabelEl = document.getElementById('Vpri_label');
+    const BypassRatioEl = document.getElementById('BypassRatio');
+    const QcritEl = document.getElementById('Qcrit');
+    const Ph_kWEl = document.getElementById('Ph_kW');
+    const QH_labelEl = document.getElementById('QH_label');
+
+    const resultsTableBody = document.querySelector('#resultsTable tbody');
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('copyBtn').addEventListener('click', copyResults);
+    document.getElementById('examplesBtn').addEventListener('click', (e) => { e.preventDefault(); loadExamples(); });
+
+    logoUrlEl.addEventListener('input', () => { logoImgEl.src = logoUrlEl.value || ''; });
+
+    function createCircuit(data = {}) {
+      const node = tpl.content.cloneNode(true);
+      const el = node.querySelector('.circuit');
+
+      const nameEl = el.querySelector('.c-name');
+      const modeEl = el.querySelector('.c-mode');
+      const PEl = el.querySelector('.c-P');
+      const TiEl = el.querySelector('.c-Ti');
+      const TrEl = el.querySelector('.c-Tr');
+      const critEl = el.querySelector('.c-crit');
+      const tipDelta = el.querySelector('.tip-delta');
+      const tipRange = el.querySelector('.tip-range');
+      const tipSign  = el.querySelector('.tip-sign');
+      const btnSuggest = el.querySelector('.btn-suggest');
+      const btnDel = el.querySelector('.btn-del');
+
+      // Defaults / load data
+      nameEl.value = data.name ?? '';
+      modeEl.value = data.mode ?? 'frio';
+      PEl.value = data.P ?? 100;
+      TiEl.value = data.Ti ?? 7;
+      TrEl.value = data.Tr ?? 12;
+      critEl.checked = !!data.crit;
+
+      const onChange = () => {
+        const Ti = Number.parseFloat(TiEl.value || '0');
+        const Tr = Number.parseFloat(TrEl.value || '0');
+        const P  = Number.parseFloat(PEl.value || '0');
+
+        const dT      = Ti - Tr;
+        const dT_abs  = Math.abs(dT);
+        const Tm      = (Ti + Tr) / 2;
+        const mode    = modeEl.value;
+        const signOk  = (mode === 'frio') ? (Tr > Ti) : (Ti > Tr);
+
+        // Chips informativos
+        tipDelta.textContent = `ΔT = ${round(dT_abs,2)} K`;
+        if (Tm < 5 || Tm > 80) {
+          tipRange.textContent = `Tₘ=${round(Tm,1)}°C (fuera de 5–80°C)`;
+          tipRange.classList.add('warn');
+        } else {
+          tipRange.textContent = `Tₘ=${round(Tm,1)}°C`;
+          tipRange.classList.remove('warn');
+        }
+        tipSign.textContent = signOk ? 'Signo ΔT ok' : 'Signo ΔT no esperado';
+        tipSign.classList.toggle('warn', !signOk);
+
+        // Estilos por error (solo bloqueante si P<=0 o ΔT_abs<=0)
+        [PEl, TiEl, TrEl].forEach(inp => inp.style.borderColor = 'var(--border)');
+        if (P <= 0) PEl.style.borderColor = 'var(--err)';
+        if (dT_abs <= 0) { TiEl.style.borderColor = 'var(--err)'; TrEl.style.borderColor = 'var(--err)'; }
+
+        computeAll();
+      };
+
+      [nameEl, modeEl, PEl, TiEl, TrEl, critEl].forEach(inp => inp.addEventListener('input', onChange));
+      btnSuggest.addEventListener('click', () => {
+        const mode = modeEl.value;
+        if (mode === 'frio') { TiEl.value = '7.0'; TrEl.value = '12.0'; }
+        else { TiEl.value = '50.0'; TrEl.value = '30.0'; }
+        onChange();
+      });
+      btnDel.addEventListener('click', () => { el.remove(); computeAll(); });
+
+      circuitsEl.appendChild(node);
+      computeAll();
+    }
+
+    document.getElementById('addCircuit').addEventListener('click', () => createCircuit());
+
+    // ===== Cálculo global =====
+    function computeAll() {
+      const vSec = Number.parseFloat(vSecEl.value || '1.2');
+
+      const list = Array.from(document.querySelectorAll('.circuit')).map(el => {
+        const name = el.querySelector('.c-name').value.trim() || 'Circuito';
+        const mode = el.querySelector('.c-mode').value;
+        const P = Number.parseFloat(el.querySelector('.c-P').value || '0');
+        const Ti = Number.parseFloat(el.querySelector('.c-Ti').value || '0');
+        const Tr = Number.parseFloat(el.querySelector('.c-Tr').value || '0');
+        const crit = el.querySelector('.c-crit').checked;
+
+        const dT = Ti - Tr;
+        const dT_abs = Math.abs(dT);
+        const Tm = (Ti + Tr) / 2;
+
+        const valid = (P > 0 && dT_abs > 0);
+        let rho = NaN, cp = NaN, Q_m3s = 0, Q_m3h = 0, Q_ls = 0, mdot = 0, dnSec = '—', v_res = 0;
+
+        if (valid) {
+          rho = rhoWater(Tm);
+          cp  = cpWater(Tm);
+          Q_m3s = (P) / (rho * cp * dT_abs);     // kW / (kg/m3 * kJ/kgK * K) => m3/s
+          Q_m3h = Q_m3s * 3600.0;
+          Q_ls  = Q_m3s * 1000.0;
+          mdot  = rho * Q_m3s;
+
+          const pick = suggestDNfromQ(Q_m3s, vSec);
+          dnSec = `${pick.dn}`;
+          v_res = pick.v_ms;
+        }
+
+        return { name, mode, P, Ti, Tr, dT_abs, Tm, rho, cp, Q_m3s, Q_m3h, Q_ls, mdot, dnSec, v_res, crit, valid };
+      });
+
+      // Pintar tabla
+      resultsTableBody.innerHTML = '';
+      let Qtotal_m3s = 0;
+      let Qcrit_m3h = 0;
+      list.forEach(row => {
+        if (row.valid) Qtotal_m3s += row.Q_m3s;
+        if (row.crit && row.valid) Qcrit_m3h = row.Q_m3h;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.name}</td>
+          <td>${row.mode === 'frio' ? 'Frío' : 'Calor'}</td>
+          <td class="r">${row.valid ? round(row.P,0) : '—'}</td>
+          <td class="r">${row.valid ? `${round(row.Ti,1)} / ${round(row.Tr,1)}` : '—'}</td>
+          <td class="r ${row.dT_abs<=0?'err':''}">${row.valid ? round(row.dT_abs,2) : '—'}</td>
+          <td class="r">${row.valid ? round(row.Tm,1) : '—'}</td>
+          <td class="r">${row.valid ? round(row.rho,1) : '—'}</td>
+          <td class="r">${row.valid ? round(row.cp,4) : '—'}</td>
+          <td class="r">${row.valid ? round(row.Q_m3h,2) : '—'}</td>
+          <td class="r">${row.valid ? round(row.Q_ls,3) : '—'}</td>
+          <td class="r">${row.valid ? round(row.mdot,2) : '—'}</td>
+          <td class="r" title="Velocidad resultante ≈ ${row.valid ? round(row.v_res,2) : '—'} m/s">${row.dnSec}</td>
+          <td>${row.crit ? '✅' : ''}</td>
+        `;
+        resultsTableBody.appendChild(tr);
+      });
+
+      // Globales
+      const Qtotal_m3h = Qtotal_m3s * 3600;
+      const Qtotal_ls  = Qtotal_m3s * 1000;
+      Qtotal_m3hEl.textContent = nf(Qtotal_m3h, 2);
+      Qtotal_lsEl.textContent  = nf(Qtotal_ls, 3);
+
+      // DN Primario
+      const vPri = Number.parseFloat(vPriEl.value || '2.0');
+      const pickPri = suggestDNfromQ(Qtotal_m3s, vPri);
+      DN_primaryEl.textContent = `${pickPri.dn}`;
+      VpriLabelEl.textContent = `v≈${round(pickPri.v_ms,2)} m/s`;
+
+      // Bypass mínimo
+      const Qbypass_m3h = Number.parseFloat(QbypassEl.value || '0');
+      const ratio = (Qtotal_m3h>0) ? (Qbypass_m3h / Qtotal_m3h) : 0;
+      BypassRatioEl.innerHTML = `${nf(Qbypass_m3h,1)} / ${nf(Qtotal_m3h,1)} m³/h <span class="${ratio>0.2?'warn':''}">(${nf(ratio*100,1)}%)</span>`;
+      QcritEl.textContent = Qcrit_m3h > 0 ? nf(Qcrit_m3h,1) : '—';
+
+      // Potencia hidráulica estimada
+      const H = Number.parseFloat(HEl.value || '0');
+      const eta = Number.parseFloat(etaEl.value || '0.65');
+      const rhoNom = 998; // aproximación global
+      const Ph_kW = (eta>0 && H>0) ? (rhoNom * 9.81 * Qtotal_m3s * H / eta) / 1000.0 : 0;
+      Ph_kWEl.innerHTML = (H>0 && eta>0) ? nf(Ph_kW,3) : '—';
+      QH_labelEl.textContent = `Q=${nf(Qtotal_m3h,2)} m³/h · H=${nf(H,1)} m`;
+
+      // Validaciones globales
+      etaEl.style.borderColor = (eta <= 0 || eta > 0.95) ? 'var(--warn)' : 'var(--border)';
+      HEl.style.borderColor   = (H < 0) ? 'var(--err)' : 'var(--border)';
+    }
+
+    // ===== Copiar resultados (JSON) =====
+    function copyResults() {
+      const rows = Array.from(document.querySelectorAll('.circuit')).map(el => {
+        const name = el.querySelector('.c-name').value.trim() || 'Circuito';
+        const mode = el.querySelector('.c-mode').value;
+        const P = Number.parseFloat(el.querySelector('.c-P').value || '0');
+        const Ti = Number.parseFloat(el.querySelector('.c-Ti').value || '0');
+        const Tr = Number.parseFloat(el.querySelector('.c-Tr').value || '0');
+        const crit = el.querySelector('.c-crit').checked;
+        const dT_abs = Math.abs(Ti - Tr);
+        const Tm = (Ti + Tr) / 2;
+        const rho = rhoWater(Tm);
+        const cp  = cpWater(Tm);
+        const valid = (P > 0 && dT_abs > 0);
+        const Q_m3s = valid ? (P) / (rho * cp * dT_abs) : 0;
+        const Q_m3h = Q_m3s * 3600;
+        const Q_ls  = Q_m3s * 1000;
+        const mdot  = rho * Q_m3s;
+        return { name, mode, P_kW: P, Ti_C: Ti, Tr_C: Tr, dT_K: dT_abs, Tm_C: Tm, rho_kgm3: rho, cp_kJkgK: cp, Q_m3h, Q_ls, mdot_kgs: mdot, critico: crit };
+      });
+
+      const H = Number.parseFloat(HEl.value || '0');
+      const eta = Number.parseFloat(etaEl.value || '0.65');
+      const vSec = Number.parseFloat(vSecEl.value || '1.2');
+      const vPri = Number.parseFloat(vPriEl.value || '2.0');
+      const Qbypass = Number.parseFloat(QbypassEl.value || '0');
+      const Qtotal_m3h = rows.reduce((a, r) => a + r.Q_m3h, 0);
+
+      const payload = { id: "MEP-002", version: "1.0.1", global: { H_mca: H, eta, v_sec_ms: vSec, v_pri_ms: vPri, Q_bypass_min_m3h: Qbypass, Q_total_m3h: Qtotal_m3h }, circuits: rows };
+      const txt = JSON.stringify(payload, null, 2);
+      navigator.clipboard.writeText(txt).then(() => alert("Resultados copiados al portapapeles (JSON)."))
+      .catch(() => alert("No se pudo copiar. Comprueba permisos del navegador."));
+    }
+
+    // ===== Cargar ejemplos =====
+    function loadExamples() {
+      circuitsEl.innerHTML = '';
+      createCircuit({ name: 'Frío – UTA', mode: 'frio', P: 500, Ti: 7, Tr: 12, crit: true });
+      createCircuit({ name: 'Calor – Fancoils', mode: 'calor', P: 300, Ti: 50, Tr: 30, crit: false });
+      document.getElementById('H').value = 15;
+      document.getElementById('eta').value = 0.65;
+      document.getElementById('vSec').value = 1.2;
+      document.getElementById('vPri').value = 2.0;
+      document.getElementById('Qbypass').value = 20;
+      computeAll();
+    }
+
+    // Init
+    addEventListener('DOMContentLoaded', () => { loadExamples(); });
+  </script>
+</body>
+</html>
